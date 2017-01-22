@@ -1,0 +1,20 @@
+# gitignore for EcEn 631 - Robotic Vision class projects repository
+
+# gitignores pulled from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
+*.suo
+*.exe
+*.ilk
+*.pdb
+*.VC.db
+*.log
+*.obj
+
+# Folder ignores
+#Debug/
+
+# My Visual Studio ignores
+*.tlog
+*.idb
+
+# Output ignores
+*.avi
