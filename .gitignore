@@ -15,6 +15,7 @@
 # My Visual Studio ignores
 *.tlog
 *.idb
+*.obj.enc
 
 # Output ignores
 *.avi

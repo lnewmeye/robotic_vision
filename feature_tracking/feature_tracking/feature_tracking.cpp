@@ -38,18 +38,26 @@ using cv::absdiff;
 using cv::VideoWriter;
 using cv::Size;
 
-#define WRITE_VIDEO true
+// Options for video output
+#define WRITE_VIDEO false
 #define VIDEO_TITLE "video_output.avi"
-#define VIDEO_RATE 15
+#define VIDEO_RATE 30
 
-enum State {VIDEO, BLACK, THRESHOLD, CANNY, CORNER, LINE, DIFFERENCE};
+// Options for auto rotate frame processing
+#define AUTO_ROTATE true
+#define FRAME_COUNT 2*VIDEO_RATE
 
+// State type enumeration for state machine
+enum State {VIDEO, BLACK, THRESHOLD, CANNY, CORNER, LINE, DIFFERENCE, QUIT};
+
+// Function declarations
 string type2str(int type);
 void cornerDetect(Mat input, Mat output, int max_corners, double corner_quality);
 //void lineDetect(Mat input, Mat output);
 void lineDetect(Mat input, Mat output, int canny_th1, int canny_th2, 
 	int line_threshold, int line_length, int line_gap);
 
+// Begin main
 int main()
 {
 	// Open camera and error and exit if failure to open
@@ -59,16 +67,25 @@ int main()
 		return -1;
 	}
 
+	// If selected open video to write and exit if failure to open
 #if WRITE_VIDEO == true
 	VideoWriter video;
+	Mat out;
 	Size image_size = Size((int)camera.get(CV_CAP_PROP_FRAME_WIDTH),
 		(int)camera.get(CV_CAP_PROP_FRAME_HEIGHT));
 	video.open(VIDEO_TITLE, VideoWriter::fourcc('M', 'J', 'P', 'G'), VIDEO_RATE, image_size, true);
 	if (!video.isOpened())
 	{
-		cout << "Could not open the output video" << endl;
+		cout << "Could not open video output" << endl;
 		return -1;
 	}
+#endif
+
+	// If selected set variables sequence for auto rotate
+#if AUTO_ROTATE == true
+	int frame_count = 0;
+	int rotate_count = 0;
+	char keypress_sequence[7] = {'b', 't', 'c', 'r', 'l', 'd', 'q'};
 #endif
 	
 	// Create window for video output with trackbars for user control
@@ -186,6 +203,16 @@ int main()
 		imshow(WINDOW_NAME, display);
 		keypress = waitKey(1);
 
+		// If selected increment frame count and auto rotate if count reached
+#if AUTO_ROTATE == true
+		frame_count++;
+		if (frame_count >= FRAME_COUNT) {
+			keypress = keypress_sequence[rotate_count];
+			rotate_count++;
+			frame_count = 0;
+		}
+#endif
+
 		// Go through keypress cases and update state
 		switch (keypress) {
 		case 'v': cout << "Video (no processing)..." << endl;
@@ -268,10 +295,12 @@ int main()
 		// Save frame as "previous" (for difference processing)
 		previous = frame.clone();
 
-		// Write frame to output if write option is set
+		// If selected write frame to output
 #if WRITE_VIDEO == true
-		video << frame;
+		out = display.clone();
+		video << out;
 #endif
+
 	}
 
 	return 0;
