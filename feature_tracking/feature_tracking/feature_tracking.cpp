@@ -85,7 +85,7 @@ int main()
 #if AUTO_ROTATE == true
 	int frame_count = 0;
 	int rotate_count = 0;
-	char keypress_sequence[7] = {'b', 't', 'c', 'r', 'l', 'd', 'q'};
+	char keypress_sequence[6] = {'t', 'c', 'r', 'l', 'd', 'q'};
 #endif
 	
 	// Create window for video output with trackbars for user control
@@ -139,7 +139,7 @@ int main()
 	const int LINE_THRESHOLD_DEFAULT = 1;
 	const int LINE_LENGTH_MIN = 10;
 	const int LINE_LENGTH_MAX = 100;
-	const int LINE_LENGTH_DEFAULT = 50;
+	const int LINE_LENGTH_DEFAULT = 70;
 	const int LINE_GAP_MIN = 1;
 	const int LINE_GAP_MAX = 100;
 	const int LINE_GAP_DEFAULT = 10;
