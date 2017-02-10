@@ -3,10 +3,10 @@
 #include <vector>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
-#include <opencv2/calib3d.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include "calibration.h"
 
 using std::cout;
 using std::endl;
@@ -15,10 +15,11 @@ using std::vector;
 
 using cv::Mat;
 using cv::Size;
-using cv::Point2f;
-using cv::Point3f;
-using cv::Vec2f;
-using cv::Vec3f;
+
+// Aplication parameters
+//#define USE_DEFAULT_PARAMS // Comment out to pull parameters from data source
+//#define PRINT_PARAMS // Comment out to not print parameters
+#define DATA_SOURCE 0 // Options: images=0, camera=1
 
 // Display parameters
 #define WINDOW_NAME "Display Window" // Name of display window
@@ -36,11 +37,24 @@ using cv::Vec3f;
 // Ouptut image parameters (comment out when not needed)
 //#define OUTPUT_IMAGE "output/task1_corner_detection.jpg"
 
+// Undistortion image parameters
+#define UNDISTORT_SEQUENCE {"Close", "Far", "Turn"}
+#define UNDISTORT_EXTENSION ".jpg"
+#define UNDISTORT_FOLDER "images/"
+#define UNDISTORT_QUANTITY 3
+const string UNDISTORT_IMAGES[UNDISTORT_QUANTITY] = UNDISTORT_SEQUENCE;
+
+// Default calibration parameters
+#define DEFAULT_INTRINSIC 1145.223455665104, 0, 328.945216696177, 0, \
+	1143.600007277263, 222.1597641571362, 0, 0, 1
+#define DEFAULT_DISTORTION -0.2575507934862325, 0.04884197280891184, \
+	-0.001409751152446753, -0.001543707631160005, 0.9076529637760357
+const Mat INTRINSIC_PARAMS = (cv::Mat_<double>(3,3) << DEFAULT_INTRINSIC);
+const Mat DISTORTION_PARAMS = (cv::Mat_<double>(5,1) << DEFAULT_DISTORTION);
+
 // Function declarations
-vector<Point2f> locateCorners(Mat input_image, Mat& output_image);
 string generateFilename(string folder, string prefix, int number, string type);
 void saveImage(Mat image, string image_name);
-void calibrateCamera(vector<vector<Point2f>> points);
 
 int main()
 {
@@ -51,24 +65,33 @@ int main()
 	image_number++;
 	Mat image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
 	
+	// Create Calibration object
+	Size image_size = Size(IMAGE_WIDTH, IMAGE_HEIGHT);
+	Size pattern_size = Size(CHESSBOARD_ROWS, CHESSBOARD_COLUMNS);
+	Calibration calibration(image_size, pattern_size);
+	
 	// Create variables for loop
 	int keypress = 0;
-	Mat display;
-	vector<Point2f> corners;
-	vector<vector<Point2f>> calibration_points;
+	Mat difference, display;
+	//vector<Point2f> corners;
+	//vector<vector<Point2f>> calibration_points;
 	
 	// Create window
 	cv::namedWindow(WINDOW_NAME, CV_WINDOW_AUTOSIZE);
 	
+#ifdef USE_DEFAULT_PARAMS
+	calibration.setParams(INTRINSIC_PARAMS, DISTORTION_PARAMS);
+#else
 	// Loop through iamges while 'q' is not pressed
 	while (image.data && keypress != 'q') {
 		
 		// Locate corners on image and add to vector
-		corners = locateCorners(image, display);
+		//corners = locateCorners(image, display);
+		calibration.addCalibrationImage(image, display);
 		
 		// Copy corners to data structure
-		calibration_points.push_back(corners);
-			
+		//calibration_points.push_back(corners);
+		
 		// Display image
 		cv::imshow(WINDOW_NAME, display);
 		
@@ -88,72 +111,31 @@ int main()
 	}
 	
 	// Calibrate camera
-	calibrateCamera(calibration_points);
+	//calibrateCamera(calibration_points);
+	calibration.runCalibration();
+#ifdef PRINT_PARAMS
+	Mat param = calibration.getIntrinsic();
+	cout << "Intrinsic = " << endl << param << endl;
+	param = calibration.getDistortion();
+	cout << "Distortion = " << endl << param << endl;
+#endif //PRINT_PARAMS
 	
-	return 0;
-}
-
-vector<Point2f> locateCorners(Mat input_image, Mat& output_image)
-{
-	// Create color version of input image
-	cv::cvtColor(input_image, output_image, CV_GRAY2RGB);
+#endif //USE_DEFAULT_PARAMS
 	
-	// Create variables
-	vector<Point2f> corners;
-	Size pattern_size = Size(CHESSBOARD_ROWS, CHESSBOARD_COLUMNS);
-	Size search_size = Size(5,5);
-	Size zero_zone = Size(-1,-1);
-	cv::TermCriteria criteria = cv::TermCriteria( CV_TERMCRIT_EPS + 
-		CV_TERMCRIT_ITER, 40, 0.001);
-	bool pattern_found;
-	
-	// Find chessboard corners, refine corners, and draw
-	pattern_found = findChessboardCorners(input_image, pattern_size, corners);
-	cv::cornerSubPix(input_image, corners, search_size, zero_zone, criteria);
-	drawChessboardCorners(output_image, pattern_size, corners, pattern_found);
-	
-	// Return found corners
-	return corners;
-}
-
-void calibrateCamera(vector<vector<Point2f>> points)
-{
-	// Create vector of vector of point indicies
-	vector<vector<Point3f>> indicies;
-	for (int i = 0; i < points.size(); i++) {
+	// Loop through input images and undistort
+	for (int i = 0; i < UNDISTORT_QUANTITY; i++) {
+		image_name = UNDISTORT_FOLDER + UNDISTORT_IMAGES[i] + UNDISTORT_EXTENSION;
+		image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
+		cout << "Read in image: " << image_name << endl;
 		
-		// Create vector of points
-		vector<Point3f> index;
-		
-		// Loop through rows and columns and add points
-		for (int j = 0; j < CHESSBOARD_ROWS; j++) {
-			for (int k = 0; k < CHESSBOARD_COLUMNS; k++) {
-				Point3f point;
-				point.x = k;
-				point.y = j;
-				point.z = 0;
-				index.push_back(point);
-			}
-		}
-		
-		// Push new vector to set of indicies
-		indicies.push_back(index);
+		// Undistort Image
+		calibration.undistortImage(image, display);
+		cv::absdiff(image, display, difference);
+		cv::imshow(WINDOW_NAME, difference);
+		cv::waitKey(0);
 	}
 	
-	// Create data structures to get data
-	Mat intrinsic = Mat::eye(3, 3, CV_64F);
-	Mat distortion = Mat::zeros(5, 1, CV_64F);
-	vector<Mat> rvecs, tvecs;
-	Size image_size = Size(IMAGE_WIDTH, IMAGE_HEIGHT);
-	int rms;
-	
-	// Run camera calibration
-	rms = cv::calibrateCamera(indicies, points, image_size, intrinsic, 
-		distortion, rvecs, tvecs);
-	
-	cout << "Root Mean Square = " << rms << endl;
-	cout << "Intrinsic parameters = " << endl << intrinsic << endl;
-	cout << "Distortion parameters = " << endl << distortion << endl;
+	return 0;
 }
 
 void saveImage(Mat image, string image_name)
