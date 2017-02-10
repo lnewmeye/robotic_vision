@@ -18,24 +18,28 @@ using cv::Size;
 
 // Aplication parameters
 //#define USE_DEFAULT_PARAMS // Comment out to pull parameters from data source
-//#define PRINT_PARAMS // Comment out to not print parameters
-#define DATA_SOURCE 0 // Options: images=0, camera=1
-
-// Display parameters
+#define PRINT_PARAMS // Comment out to not print parameters
+#define DATA_SOURCE 1 // Options: images=0, camera=1
 #define WINDOW_NAME "Display Window" // Name of display window
-#define DISPLAY_TIME 1 // ms of time to display image
+#define DISPLAY_TIME 800 // ms of time to display image
 
 // Image input parameters
 #define IMAGE_FOLDER "images/"
 #define IMAGE_PREFIX "AR"
 #define IMAGE_TYPE ".jpg"
-#define IMAGE_WIDTH 640
-#define IMAGE_HEIGHT 480
-#define CHESSBOARD_ROWS 10
-#define CHESSBOARD_COLUMNS 7
+#define CALIBRATION_QUANTITY 50
+
+// Chessboard parameters
+#if DATA_SOURCE == 0
+	#define CHESSBOARD_ROWS 10
+	#define CHESSBOARD_COLUMNS 7
+#else //DATA_SOURCE == 1
+	#define CHESSBOARD_ROWS 9
+	#define CHESSBOARD_COLUMNS 7
+#endif
 
 // Ouptut image parameters (comment out when not needed)
-//#define OUTPUT_IMAGE "output/task1_corner_detection.jpg"
+//#define OUTPUT_IMAGE "output/distortion_correction.jpg"
 
 // Undistortion image parameters
 #define UNDISTORT_SEQUENCE {"Close", "Far", "Turn"}
@@ -58,23 +62,34 @@ void saveImage(Mat image, string image_name);
 
 int main()
 {
-	// Create image variables and load first image
+	// Create image varialbles
+	string image_name;
 	int image_number = 1;
-	string image_name = generateFilename(IMAGE_FOLDER, IMAGE_PREFIX,
-		image_number, IMAGE_TYPE);
+	Mat image;
+	
+	// Load first image
+#if DATA_SOURCE == 0
+	image_name = generateFilename(IMAGE_FOLDER, IMAGE_PREFIX, image_number, IMAGE_TYPE);
+	image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
 	image_number++;
-	Mat image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
+#else //DATA_SOURCE == 1
+	cv::VideoCapture camera(0);
+    if (!camera.isOpened()) {
+            cout << "Error: camera not open" << endl;
+            return -1;
+    }
+	camera >> image;
+	cv::cvtColor(image, image, CV_RGB2GRAY);
+#endif
 	
 	// Create Calibration object
-	Size image_size = Size(IMAGE_WIDTH, IMAGE_HEIGHT);
+	Size image_size = image.size();
 	Size pattern_size = Size(CHESSBOARD_ROWS, CHESSBOARD_COLUMNS);
 	Calibration calibration(image_size, pattern_size);
 	
 	// Create variables for loop
 	int keypress = 0;
 	Mat difference, display;
-	//vector<Point2f> corners;
-	//vector<vector<Point2f>> calibration_points;
 	
 	// Create window
 	cv::namedWindow(WINDOW_NAME, CV_WINDOW_AUTOSIZE);
@@ -83,31 +98,27 @@ int main()
 	calibration.setParams(INTRINSIC_PARAMS, DISTORTION_PARAMS);
 #else
 	// Loop through iamges while 'q' is not pressed
-	while (image.data && keypress != 'q') {
+	while (image.data && keypress != 'q' && image_number < CALIBRATION_QUANTITY) {
 		
 		// Locate corners on image and add to vector
-		//corners = locateCorners(image, display);
 		calibration.addCalibrationImage(image, display);
-		
-		// Copy corners to data structure
-		//calibration_points.push_back(corners);
 		
 		// Display image
 		cv::imshow(WINDOW_NAME, display);
-		
-		// Write image (if selected)
-#ifdef OUTPUT_IMAGE
-		saveImage(display, OUTPUT_IMAGE);
-#endif
 		
 		// Wait for keypress
 		keypress = cv::waitKey(DISPLAY_TIME);
 		
 		// Load next image
+#if DATA_SOURCE == 0
 		image_name = generateFilename(IMAGE_FOLDER, IMAGE_PREFIX,
 			image_number, IMAGE_TYPE);
-		image_number++;
 		image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
+#else //DATA_SOURCE == 1
+		camera >> image;
+		cv::cvtColor(image, image, CV_RGB2GRAY);
+#endif //DATA_SOURCE
+		image_number++;
 	}
 	
 	// Calibrate camera
@@ -118,11 +129,14 @@ int main()
 	cout << "Intrinsic = " << endl << param << endl;
 	param = calibration.getDistortion();
 	cout << "Distortion = " << endl << param << endl;
+	int rms = calibration.getRMS();
+	cout << "RMS = " << rms << endl;
 #endif //PRINT_PARAMS
 	
 #endif //USE_DEFAULT_PARAMS
 	
 	// Loop through input images and undistort
+#if DATA_SOURCE == 0
 	for (int i = 0; i < UNDISTORT_QUANTITY; i++) {
 		image_name = UNDISTORT_FOLDER + UNDISTORT_IMAGES[i] + UNDISTORT_EXTENSION;
 		image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
@@ -132,8 +146,23 @@ int main()
 		calibration.undistortImage(image, display);
 		cv::absdiff(image, display, difference);
 		cv::imshow(WINDOW_NAME, difference);
+		
+		// Write image (if selected)
+#ifdef OUTPUT_IMAGE
+		saveImage(difference, OUTPUT_IMAGE);
+#endif
+		
 		cv::waitKey(0);
 	}
+#else //DATA_SOURCE == 1
+	while (image.data && keypress != 'q') {
+		camera >> image;
+		calibration.undistortImage(image, display);
+		cv::absdiff(image, display, difference);
+		cv::imshow(WINDOW_NAME, difference);
+		keypress = cv::waitKey(1);
+	}
+#endif
 	
 	return 0;
 }
@@ -151,3 +180,5 @@ string generateFilename(string folder, string prefix, int number, string type)
 	// Return file path
 	return folder + prefix + value + type;
 }
+
+//void translate

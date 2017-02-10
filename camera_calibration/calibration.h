@@ -19,6 +19,7 @@ class Calibration
 		// Basic variable gets
 		Mat getIntrinsic() {return intrinsic_params;}
 		Mat getDistortion() {return distortion_params;}
+		int getRMS() {return rms;}
 		
 		// Class operations
 		void setParams(Mat intrinsic_params, Mat distortion_params);

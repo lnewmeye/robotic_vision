@@ -27,11 +27,15 @@ void Calibration::addCalibrationImage(Mat image, Mat& display)
 	
 	// Find chessboard corners, refine corners, and draw
 	pattern_found = cv::findChessboardCorners(image, pattern_size, corners);
-	cv::cornerSubPix(image, corners, search_size, zero_zone, criteria);
-	cv::drawChessboardCorners(display, pattern_size, corners, pattern_found);
 	
-	// Push corners to data structure
-	calibration_points.push_back(corners);
+	// Draw if pattern found
+	if(pattern_found) {
+		cv::cornerSubPix(image, corners, search_size, zero_zone, criteria);
+		cv::drawChessboardCorners(display, pattern_size, corners, pattern_found);
+
+		// Push corners to data structure
+		calibration_points.push_back(corners);
+	}
 }
 
 void Calibration::runCalibration()
