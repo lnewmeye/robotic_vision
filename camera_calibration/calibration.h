@@ -26,6 +26,8 @@ class Calibration
 		void addCalibrationImage(Mat image, Mat& display);
 		void runCalibration();
 		void undistortImage(Mat image_in, Mat& image_out);
+		void estimatePose(vector<Point3f> object_points, 
+			vector<Point2f> image_points, Mat& rotation, Mat& translation);
 		
 	private:
 		// Image parameters

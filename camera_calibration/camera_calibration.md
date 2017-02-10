@@ -1,5 +1,7 @@
 # Camera Calibration & Distortion Correction
-*EcEn 631 - Assignment 2 - Luke Newmeyer*
+#### *EcEn 631 - Assignment 2 - Luke Newmeyer*
+
+<br>
 
 ## Task 1 - Corner Detection
 
@@ -7,6 +9,7 @@ The following is the result given from my code written for corner detection.
 
 ### Corner Detection Output
 ![Corner Detection Output](output/task1_corner_detection.jpg)
+
 
 ## Task 2 - Intrinsic Parameters
 
@@ -37,9 +40,22 @@ The following images are distortion corrected from the intrinsic parameters comp
 ### Distortion Correction Turn
 ![Distortion Correction Turn](output/distortion_correction_turn.jpg)
 
+
 ## Task 4 - Object Pose Estimation
 
-## Task 5 - Intrinsic Parameters
+The following are the rotation and translation matricies for the object data provided.
+
+	rotation = 
+		[0.7354706625150564, -0.6774298093547906, 0.01310564676756049;
+		 -0.003190169014756383, -0.02280449923942213, -0.9997348536667592;
+		 0.6775490590365552, 0.7352338459374481, -0.01893315575141785]
+	translation = 
+		[-0.02466089907017876;
+		 10.48750338023632;
+		 46.67923546700356]
+
+
+## Task 5 - Intrinsic Parameters (Camera)
 
 The following are the intrinsic and distortion parameters using my personal webcam.
 
@@ -55,7 +71,7 @@ The following are the intrinsic and distortion parameters using my personal webc
 		 -1.617042692213017]
 
 
-## Task 6 - Distortion Correction
+## Task 6 - Distortion Correction (Camera)
 
 The following is an image captured, corrected for distortion, and diffed against the original.
 

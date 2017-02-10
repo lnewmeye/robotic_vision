@@ -74,3 +74,10 @@ void Calibration::undistortImage(Mat image_in, Mat& image_out)
 {
 	cv::undistort(image_in, image_out, intrinsic_params, distortion_params);
 }
+
+void Calibration::estimatePose(vector<Point3f> object_points, vector<Point2f> 
+	image_points, Mat& rotation, Mat& translation)
+{
+	cv::solvePnP(object_points, image_points, intrinsic_params, 
+		distortion_params, rotation, translation);
+}

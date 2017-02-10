@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <opencv2/core.hpp>
@@ -12,14 +13,16 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::vector;
+using std::ifstream;
 
 using cv::Mat;
 using cv::Size;
 
 // Aplication parameters
-//#define USE_DEFAULT_PARAMS // Comment out to pull parameters from data source
+#define USE_DEFAULT_PARAMS // Comment out to pull parameters from data source
 #define PRINT_PARAMS // Comment out to not print parameters
-#define DATA_SOURCE 1 // Options: images=0, camera=1
+#define FIND_POSE // Comment out to skip this step
+#define DATA_SOURCE 0 // Options: images=0, camera=1
 #define WINDOW_NAME "Display Window" // Name of display window
 #define DISPLAY_TIME 800 // ms of time to display image
 
@@ -41,6 +44,10 @@ using cv::Size;
 // Ouptut image parameters (comment out when not needed)
 //#define OUTPUT_IMAGE "output/distortion_correction.jpg"
 
+// Data points parameters
+#define POINTS_FILE_NAME "DataPoints.txt"
+#define POINTS_QUANTITY 20
+
 // Undistortion image parameters
 #define UNDISTORT_SEQUENCE {"Close", "Far", "Turn"}
 #define UNDISTORT_EXTENSION ".jpg"
@@ -59,6 +66,8 @@ const Mat DISTORTION_PARAMS = (cv::Mat_<double>(5,1) << DEFAULT_DISTORTION);
 // Function declarations
 string generateFilename(string folder, string prefix, int number, string type);
 void saveImage(Mat image, string image_name);
+void readDataPoints(string file_name, vector<Point3f>& object_points, 
+	vector<Point2f>& image_points);
 
 int main()
 {
@@ -164,6 +173,18 @@ int main()
 	}
 #endif
 	
+	// Object Pose Estimation
+#ifdef FIND_POSE
+	vector<Point3f> object_points;
+	vector<Point2f> image_points;
+	readDataPoints(POINTS_FILE_NAME, object_points, image_points);
+	Mat rotation, translation, rotation_matrix;
+	calibration.estimatePose(object_points, image_points, rotation, translation);
+	cv::Rodrigues(rotation, rotation_matrix);
+	cout << "rotation = " << endl << rotation_matrix << endl;
+	cout << "translation = " << endl << translation << endl;
+#endif
+	
 	return 0;
 }
 
@@ -179,6 +200,38 @@ string generateFilename(string folder, string prefix, int number, string type)
 	
 	// Return file path
 	return folder + prefix + value + type;
+}
+
+void readDataPoints(string file_name, vector<Point3f>& object_points, 
+	vector<Point2f>& image_points)
+{
+	// Create variables to read impage points into
+	double x, y;
+	Point2f image_point;
+	
+	// Open file to read from
+	ifstream infile(file_name);
+	
+	// Read through image points and push to vector
+	for(int i = 0; i < POINTS_QUANTITY; i++) {
+		infile >> x >> y;
+		image_point.x = x;
+		image_point.y = y;
+		image_points.push_back(image_point);
+	}
+	
+	// Create variables to read object points into
+	double xo, yo, zo;
+	Point3f object_point;
+	
+	// Read through object points and push to vector
+	for(int i = 0; i < POINTS_QUANTITY; i++) {
+		infile >> xo >> yo >> zo;
+		object_point.x = xo;
+		object_point.y = yo;
+		object_point.z = zo;
+		object_points.push_back(object_point);
+	}
 }
 
 //void translate
