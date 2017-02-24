@@ -22,3 +22,4 @@
 
 # Ignores for specific applications
 camera_calibration/camera_calibration
+stereo_calibration/stereo_calibration
