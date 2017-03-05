@@ -1,6 +1,10 @@
 #include "calibration.h"
 
-Calibration::Calibration(Size image_size, Size pattern_size)
+// For debug purposes
+// TODO: Remove this include
+#include <iostream>
+
+void Calibration::setSize(Size image_size, Size pattern_size)
 {
 	this->image_size = image_size;
 	this->pattern_size = pattern_size;
@@ -36,12 +40,15 @@ void Calibration::addCalibrationImage(Mat image, Mat& display)
 		// Push corners to data structure
 		calibration_points.push_back(corners);
 	}
+
+	//TODO: Remvoe this branch. For debug only
+	else
+		std::cout << "Pattern not found" << std::endl;
 }
 
 void Calibration::runCalibration()
 {
 	// Create vector of vector of point indicies
-	vector<vector<Point3f>> indicies;
 	for (unsigned i = 0; i < calibration_points.size(); i++) {
 		
 		// Create vector of points
@@ -51,22 +58,22 @@ void Calibration::runCalibration()
 		for (int j = 0; j < pattern_size.height; j++) {
 			for (int k = 0; k < pattern_size.width; k++) {
 				Point3f point;
-				point.x = k;
-				point.y = j;
+				point.x = SQUARE_SIZE * k;
+				point.y = SQUARE_SIZE * j;
 				point.z = 0;
 				index.push_back(point);
 			}
 		}
 		
 		// Push new vector to set of indicies
-		indicies.push_back(index);
+		object_points.push_back(index);
 	}
-	
+
 	// Create data structures for unused data
 	vector<Mat> rvecs, tvecs;
 	
 	// Run camera calibration
-	rms = cv::calibrateCamera(indicies, calibration_points, image_size, 
+	rms = cv::calibrateCamera(object_points, calibration_points, image_size, 
 		intrinsic_params, distortion_params, rvecs, tvecs);
 }
 

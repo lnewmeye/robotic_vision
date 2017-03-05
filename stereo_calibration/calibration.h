@@ -9,17 +9,24 @@ using cv::Size;
 using cv::Point2f;
 using cv::Point3f;
 
+#define SQUARE_SIZE 3.88
+
 class Calibration
 {
 	public:
 		// Constructur/Destructor
-		Calibration(Size image_size, Size pattern_size);
+		Calibration() {}
 		~Calibration() {}
+
+		// Set parameters
+		void setSize(Size image_size, Size pattern_size);
 		
 		// Basic variable gets
 		Mat getIntrinsic() {return intrinsic_params;}
 		Mat getDistortion() {return distortion_params;}
 		int getRMS() {return rms;}
+		vector<vector<Point2f>> getCalibrationPoints() {return calibration_points;}
+		vector<vector<Point3f>> getObjectPoints() {return object_points;}
 		
 		// Class operations
 		void setParams(Mat intrinsic_params, Mat distortion_params);
@@ -41,4 +48,5 @@ class Calibration
 		
 		// Calibration data
 		vector<vector<Point2f>> calibration_points;
+		vector<vector<Point3f>> object_points;
 };

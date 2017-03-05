@@ -8,7 +8,7 @@ LFLAGS = /usr/local/lib
 LIBS = -lopencv_core -lopencv_imgcodecs -lopencv_videoio -lopencv_highgui -lopencv_imgproc -lopencv_calib3d
 
 all: $(TARGET).cpp calibration.h calibration.cpp
-	$(CXX) calibration.cpp $(TARGET).cpp $(CFLAGS) -o $(TARGET) -L$(LFLAGS) $(LIBS)
+	$(CXX) calibration.cpp stereo.cpp $(TARGET).cpp $(CFLAGS) -o $(TARGET) -L$(LFLAGS) $(LIBS)
 
 clean:
 	rm -rf $(TARGET)
