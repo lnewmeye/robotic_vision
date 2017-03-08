@@ -1,16 +1,12 @@
 #include "calibration.h"
 
-// For debug purposes
-// TODO: Remove this include
-#include <iostream>
-
 void Calibration::setSize(Size image_size, Size pattern_size)
 {
 	this->image_size = image_size;
 	this->pattern_size = pattern_size;
 }
 
-void Calibration::setParams(Mat intrinsic_params, Mat distortion_params)
+void Calibration::setCalibration(Mat intrinsic_params, Mat distortion_params)
 {
 	this->intrinsic_params = intrinsic_params.clone();
 	this->distortion_params = distortion_params.clone();
@@ -40,10 +36,6 @@ void Calibration::addCalibrationImage(Mat image, Mat& display)
 		// Push corners to data structure
 		calibration_points.push_back(corners);
 	}
-
-	//TODO: Remvoe this branch. For debug only
-	else
-		std::cout << "Pattern not found" << std::endl;
 }
 
 void Calibration::runCalibration()

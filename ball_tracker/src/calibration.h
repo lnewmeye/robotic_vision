@@ -29,7 +29,7 @@ class Calibration
 		vector<vector<Point3f>> getObjectPoints() {return object_points;}
 		
 		// Class operations
-		void setParams(Mat intrinsic_params, Mat distortion_params);
+		void setCalibration(Mat intrinsic_params, Mat distortion_params);
 		void addCalibrationImage(Mat image, Mat& display);
 		void runCalibration();
 		void undistortImage(Mat image_in, Mat& image_out);
