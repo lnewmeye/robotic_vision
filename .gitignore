@@ -9,6 +9,9 @@
 *.log
 *.obj
 
+# vim ignores
+*.swp
+
 # Folder ignores
 #Debug/
 
@@ -23,3 +26,4 @@
 # Ignores for specific applications
 camera_calibration/camera_calibration
 stereo_calibration/stereo_calibration
+ball_tracker/bin
