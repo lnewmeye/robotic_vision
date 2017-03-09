@@ -20,7 +20,8 @@ class Stereo
 				cv::Mat fundamental);
 		void rectifyImage(Mat input_left, Mat input_right,
 				Mat& output_left, Mat& output_right);
-		void rectifyPoints();
+		std::vector<cv::Point2f> rectifyPointLeft(std::vector<cv::Point2f> points);
+		std::vector<cv::Point2f> rectifyPointRight(std::vector<cv::Point2f> points);
 
 		// Functions for geting variables
 		cv::Mat getRotation() {return rotation;}
@@ -43,12 +44,13 @@ class Stereo
 		cv::Mat translation;
 		cv::Mat essential;
 		cv::Mat fundamental;
+		cv::Mat disparity;
 		cv::Mat left_intrinsic;
 		cv::Mat left_distortion;
-		cv::Mat right_intrinsic;
-		cv::Mat right_distortion;
 		cv::Mat left_rectification;
 		cv::Mat left_projection;
+		cv::Mat right_intrinsic;
+		cv::Mat right_distortion;
 		cv::Mat right_rectification;
 		cv::Mat right_projection;
 };

@@ -63,6 +63,12 @@ using cv::Point2f;
 #define WINDOW_LEFT_CAMERA "Left Camera"
 #define WINDOW_RIGHT_CAMERA "Right Camera"
 
+// Functions for application
+vector<Point2f> undistortCornersLeft(vector<Point2f> corners, Stereo stereo);
+vector<Point2f> undistortCornersRight(vector<Point2f> corners, Stereo stereo);
+void drawCorners(Mat& image, vector<Point2f> corners);
+void printCornerData(vector<Point2f> corners);
+
 int main()
 {
 	// Open display windows
@@ -90,11 +96,6 @@ int main()
 	stereo.setCalibration(left_intrinsic, left_distortion, right_intrinsic,
 			right_distortion, rotation, translation, essential, fundamental);
 
-	// See if image loads correctly
-	cv::imshow(WINDOW_LEFT_CAMERA, left_image);
-	cv::imshow(WINDOW_RIGHT_CAMERA, right_image);
-	cv::waitKey(0);
-
 	// Find corners and undistort outer points
 	vector<Point2f> left_corners, right_corners;
 	Mat left_display, right_display;
@@ -107,7 +108,80 @@ int main()
 	cv::cornerSubPix(left_image, left_corners, search_size, zero_zone, criteria);
 	cv::cornerSubPix(right_image, right_corners, search_size, zero_zone, criteria);
 
+	// display corners on image
+	left_display = left_image.clone();
+	right_display = right_image.clone();
+	drawCorners(left_display, left_corners);
+	drawCorners(right_display, right_corners);
+	cv::imshow(WINDOW_LEFT_CAMERA, left_display);
+	cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
+	cv::waitKey(0);
+
+	// Undistort points
+	left_corners = undistortCornersLeft(left_corners, stereo);
+	right_corners = undistortCornersRight(right_corners, stereo);
+
+	// Undistort image
+	Mat left_undistort, right_undistort;
+	stereo.left_camera.undistortImage(left_image, left_undistort);
+	stereo.right_camera.undistortImage(right_image, right_undistort);
+
+	// Display undistorted corners on image
+	left_display = left_undistort.clone();
+	right_display = right_undistort.clone();
+	drawCorners(left_display, left_corners);
+	drawCorners(right_display, right_corners);
+	cv::imshow(WINDOW_LEFT_CAMERA, left_display);
+	cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
+	cv::waitKey(0);
+
+	printCornerData(left_corners);
+	printCornerData(right_corners);
+
 	return 0;
 }
 
+vector<Point2f> undistortCornersLeft(vector<Point2f> corners, Stereo stereo)
+{
+	// Select points to undistort
+	vector<Point2f> points;
+	points.push_back(corners[0]);
+	points.push_back(corners[CHESSBOARD_COLUMNS-1]);
+	points.push_back(corners[(CHESSBOARD_ROWS-1)*CHESSBOARD_COLUMNS]);
+	points.push_back(corners[CHESSBOARD_ROWS*CHESSBOARD_COLUMNS-1]);
 
+	// Undistort points using stereo object
+	vector<Point2f> left_undistort = stereo.rectifyPointLeft(points);
+
+	return left_undistort;
+}
+
+vector<Point2f> undistortCornersRight(vector<Point2f> corners, Stereo stereo)
+{
+	// Select points to undistort
+	vector<Point2f> points;
+	points.push_back(corners[0]);
+	points.push_back(corners[CHESSBOARD_COLUMNS-1]);
+	points.push_back(corners[(CHESSBOARD_ROWS-1)*CHESSBOARD_COLUMNS]);
+	points.push_back(corners[CHESSBOARD_ROWS*CHESSBOARD_COLUMNS-1]);
+
+	// Undistort points using stereo object
+	vector<Point2f> right_undistort = stereo.rectifyPointRight(points);
+
+	return right_undistort;
+}
+
+void drawCorners(Mat& image, vector<Point2f> corners)
+{
+	// Loop through and draw circles on corners of output
+	for(Point2f corner : corners) {
+		cv::circle(image, corner, 4, Scalar(255,0,0), -1, 8, 0);
+	}
+}
+
+void printCornerData(vector<Point2f> corners)
+{
+	for(Point2f corner : corners) {
+		cout << corner << endl;
+	}
+}
