@@ -3,8 +3,8 @@
 TARGET = ball_tracker
 SRC = src/
 BIN = bin/
-CCLASS = $(SRC)calibration.cpp $(SRC)stereo.cpp
-HCLASS = $(SRC)calibration.h $(SRC)stereo.h
+CCLASS = $(SRC)calibration.cpp $(SRC)stereo.cpp $(SRC)ball.cpp
+HCLASS = $(SRC)calibration.h $(SRC)stereo.h $(SRC)ball.h
 
 CXX=g++
 CFLAGS = -std=c++11 -Wall

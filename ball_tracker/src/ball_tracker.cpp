@@ -3,12 +3,17 @@
 // Luke Newmeyer
 
 #include <iostream>
+#include <vector>
+#include <string>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include "stereo.h"
+#include "ball.h"
 
 using std::cout;
 using std::endl;
+using std::vector;
+using std::string;
 using cv::Mat;
 using cv::Size;
 using cv::Point;
@@ -53,17 +58,24 @@ using cv::Point2f;
 		-0.0000637634, -0.0000110764, 0.6702695146, \
 		0.0504789932, -0.6677701976, 1.0000000000
 
-// Defines for image data
+// Defines for image input data
 #define IMAGE_RECONSTRUCTION_LEFT "data/reconstruct_3d_left.bmp"
 #define IMAGE_RECONSTRUCTION_RIGHT "data/reconstruct_3d_right.bmp"
 #define CHESSBOARD_ROWS 10
 #define CHESSBOARD_COLUMNS 7
+#define PITCH_FOLDER "data/ball_pitch_1/"
+#define PITCH_PREFIX_LEFT "PitchL"
+#define PITCH_PREFIX_RIGHT "PitchR"
+#define PITCH_IMAGE_TYPE ".bmp"
+
+// Defines for image output data
 
 // Display window parameters
 #define WINDOW_LEFT_CAMERA "Left Camera"
 #define WINDOW_RIGHT_CAMERA "Right Camera"
 
 // Functions for application
+string generateFilename(string folder, string prefix, int number, string type);
 vector<Point2f> undistortCornersLeft(vector<Point2f> corners, Stereo stereo);
 vector<Point2f> undistortCornersRight(vector<Point2f> corners, Stereo stereo);
 void drawCorners(Mat& image, vector<Point2f> corners);
@@ -138,7 +150,56 @@ int main()
 	printCornerData(left_corners);
 	printCornerData(right_corners);
 
+	// Set background for ball detection
+	int image_number = 0;
+	string image_name = generateFilename(PITCH_FOLDER, PITCH_PREFIX_LEFT, 
+			image_number, PITCH_IMAGE_TYPE);
+	left_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
+	image_name = generateFilename(PITCH_FOLDER, PITCH_PREFIX_RIGHT,
+			image_number, PITCH_IMAGE_TYPE);
+	right_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
+	image_number++;
+	Ball ball(left_image, right_image);
+
+	// Loop through images to detect ball
+	char keypress = 0;
+	while(left_image.data && right_image.data && keypress != 'q') {
+
+		// Process image in ball object
+		ball.detectBall(left_image, right_image, left_display, right_display);
+
+		// For now set image to display in window
+		cv::imshow(WINDOW_LEFT_CAMERA, left_display);
+		cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
+		keypress = cv::waitKey(300);
+
+		// Load next image
+		image_name = generateFilename(PITCH_FOLDER, PITCH_PREFIX_LEFT, 
+			image_number, PITCH_IMAGE_TYPE);
+		left_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
+		image_name = generateFilename(PITCH_FOLDER, PITCH_PREFIX_RIGHT,
+			image_number, PITCH_IMAGE_TYPE);
+		right_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
+		image_number++;
+	}
+
 	return 0;
+}
+
+string generateFilename(string folder, string prefix, int number, string type)
+{
+        string value;
+
+        // Adjust string value to have leading 0's
+        if (number < 10) {
+                value = "0" + std::to_string(number);
+        }
+        else {
+                value = std::to_string(number);
+        }
+
+        // Return file path
+        return folder + prefix + value + type;
 }
 
 vector<Point2f> undistortCornersLeft(vector<Point2f> corners, Stereo stereo)
