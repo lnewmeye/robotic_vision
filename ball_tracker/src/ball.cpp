@@ -22,6 +22,7 @@ using cv::Mat;
 using cv::Rect;
 using cv::Point;
 using cv::Scalar;
+using cv::Point2f;
 
 Ball::Ball(Mat left_background, Mat right_background)
 {
@@ -48,7 +49,7 @@ Ball::Ball(Mat left_background, Mat right_background)
 #endif //DEBUG
 }
 
-void Ball::detectBall(Mat left_image, Mat right_image,
+bool Ball::detectBall(Mat left_image, Mat right_image,
 		Mat& left_display, Mat& right_display)
 {
 	// Select search region of image
@@ -109,11 +110,14 @@ void Ball::detectBall(Mat left_image, Mat right_image,
 	cv::cvtColor(right_image, right_display, CV_GRAY2BGR);
 	drawSearchRegion(left_display, right_display);
 
+	bool detected = left_ball.found && right_ball.found;
+
 	// Update positions and draw if ball found
-	if (left_ball.found && right_ball.found) {
+	if (detected && left_balls.size() < BALL_DETECTIONS_MAX) {
 
 		// Draw ball and search region on output images
-		drawBall(left_display, right_display);
+		drawBall(left_display, left_ball);
+		drawBall(right_display, right_ball);
 
 		// Push ball position to vector and update search region
 		setSearchRegion(left_ball.centroid_x, left_ball.centroid_y,
@@ -122,6 +126,34 @@ void Ball::detectBall(Mat left_image, Mat right_image,
 		right_balls.push_back(right_ball);
 	}
 
+	return detected;
+}
+
+void Ball::getBackground(Mat& left_image, Mat& right_image)
+{
+	left_image = left_background.clone();
+	right_image = right_background.clone();
+}
+
+void Ball::drawComposite(Mat& left_image, Mat& right_image)
+{
+	// Iterate through and draw each left ball
+	for (Position ball : left_balls) {
+		drawBall(left_image, ball);
+	}
+
+	// Iterate through and draw each right ball
+	for (Position ball : right_balls) {
+		drawBall(right_image, ball);
+	}
+}
+
+vector<Point2f> Ball::getBallsLeft()
+{
+}
+
+vector<Point2f> Ball::getBallsLeft()
+{
 }
 
 void Ball::setSearchRegion(int left_x, int left_y, int right_x,
@@ -222,23 +254,10 @@ void Ball::drawSearchRegion(Mat& left_image, Mat& right_image)
 	cv::rectangle(right_image, right_search, color2);
 }
 
-void Ball::drawBall(Mat& left_image, Mat& right_image)
+void Ball::drawBall(Mat& image, Position ball)
 {
-	// Create variables for drawing
-	Point center;
-	Scalar color;
-
-	// Draw ball for left image if found
-	if (left_ball.found) {
-		center = Point(left_ball.centroid_x, left_ball.centroid_y);
-		color = Scalar(255, 0, 0);
-		cv::circle(left_image, center, 3, color, -1, 8, 0);
-	}
-
-	// Draw ball for right image if found
-	if (right_ball.found) {
-		center = Point(right_ball.centroid_x, right_ball.centroid_y);
-		color = Scalar(255, 0, 0);
-		cv::circle(right_image, center, 3, color, -1, 8, 0);
-	}
+	// Draw ball in image
+	Point center = Point(ball.centroid_x, ball.centroid_y);
+	Scalar color = Scalar(255, 0, 0);
+	cv::circle(image, center, 3, color, -1, 8, 0);
 }

@@ -9,7 +9,7 @@ using cv::Size;
 using cv::Point2f;
 using cv::Point3f;
 
-#define SQUARE_SIZE 3.88
+#define SQUARE_SIZE 3.88636
 
 class Calibration
 {

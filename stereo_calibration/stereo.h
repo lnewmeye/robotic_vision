@@ -13,6 +13,8 @@ class Stereo
 		// Functions for operating stereo calibration
 		Stereo(cv::Size image_size, cv::Size pattern_size);
 		~Stereo() {}
+		void addCalibrationImage(cv::Mat left_image, cv::Mat right_image,
+				cv::Mat& left_display, cv::Mat& right_display);
 		void runCalibration();
 		void rectifyImage(Mat input_left, Mat input_right,
 				Mat& output_left, Mat& output_right);
@@ -30,6 +32,8 @@ class Stereo
 	private:
 		cv::Size image_size;
 		cv::Size pattern_size;
+		std::vector<vector<Point2f>> left_points;
+		std::vector<vector<Point2f>> right_points;
 		cv::Mat rotation;
 		cv::Mat translation;
 		cv::Mat essential;

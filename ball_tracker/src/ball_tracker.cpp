@@ -59,16 +59,22 @@ using cv::Point2f;
 		0.0504789932, -0.6677701976, 1.0000000000
 
 // Defines for image input data
-#define IMAGE_RECONSTRUCTION_LEFT "data/reconstruct_3d_left.bmp"
-#define IMAGE_RECONSTRUCTION_RIGHT "data/reconstruct_3d_right.bmp"
+#define IMAGE_RECONSTRUCTION_LEFT "data/reconstruct_3d_left.jpg"
+#define IMAGE_RECONSTRUCTION_RIGHT "data/reconstruct_3d_right.jpg"
 #define CHESSBOARD_ROWS 10
 #define CHESSBOARD_COLUMNS 7
 #define PITCH_FOLDER "data/ball_pitch_1/"
 #define PITCH_PREFIX_LEFT "PitchL"
 #define PITCH_PREFIX_RIGHT "PitchR"
-#define PITCH_IMAGE_TYPE ".bmp"
+#define PITCH_IMAGE_TYPE ".jpg"
 
 // Defines for image output data
+#define OUTPUT_FOLDER "data/"
+#define OUTPUT_PREFIX_LEFT "track_left"
+#define OUTPUT_PREFIX_RIGHT "track_right"
+#define	OUTPUT_IMAGE_TYPE ".jpg"
+#define OUTPUT_COMPOSITE_LEFT "track_left_composite"
+#define OUTPUT_COMPOSITE_RIGHT "track_right_composite"
 
 // Display window parameters
 #define WINDOW_LEFT_CAMERA "Left Camera"
@@ -161,18 +167,34 @@ int main()
 	image_number++;
 	Ball ball(left_image, right_image);
 
-	// Loop through images to detect ball
+	// Setup variables for loop
 	char keypress = 0;
+	bool detected = false;
+	int output_number = 0;
+
+	// Loop through images to detect ball
 	while(left_image.data && right_image.data && keypress != 'q') {
 
 		// Process image in ball object
-		ball.detectBall(left_image, right_image, left_display, right_display);
+		detected = ball.detectBall(left_image, right_image, left_display,
+				right_display);
 
 		// For now set image to display in window
 		cv::imshow(WINDOW_LEFT_CAMERA, left_display);
 		cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
 		keypress = cv::waitKey(300);
 
+		// Write image output
+		if (detected) {
+			image_name = generateFilename(OUTPUT_FOLDER, OUTPUT_PREFIX_LEFT,
+					output_number, OUTPUT_IMAGE_TYPE);
+			cv::imwrite(image_name, left_display);
+			image_name = generateFilename(OUTPUT_FOLDER, OUTPUT_PREFIX_RIGHT,
+					output_number, OUTPUT_IMAGE_TYPE);
+			cv::imwrite(image_name, right_display);
+			output_number++;
+		}
+				
 		// Load next image
 		image_name = generateFilename(PITCH_FOLDER, PITCH_PREFIX_LEFT, 
 			image_number, PITCH_IMAGE_TYPE);
@@ -182,6 +204,26 @@ int main()
 		right_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
 		image_number++;
 	}
+
+	// Draw composite image
+	ball.getBackground(left_image, right_image);
+	cv::cvtColor(left_image, left_display, CV_GRAY2BGR);
+	cv::cvtColor(right_image, right_display, CV_GRAY2BGR);
+	ball.drawComposite(left_display, right_display);
+	cv::imshow(WINDOW_LEFT_CAMERA, left_display);
+	cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
+	cv::waitKey(0);
+
+	// Write image output
+	string folder = OUTPUT_FOLDER;
+	string prefix = OUTPUT_COMPOSITE_LEFT;
+	string type = OUTPUT_IMAGE_TYPE;
+	image_name = folder + prefix + type;
+	cv::imwrite(image_name, left_display);
+	prefix = OUTPUT_COMPOSITE_RIGHT;
+	image_name = folder + prefix + type;
+	cv::imwrite(image_name, left_display);
+	cv::imwrite(image_name, right_display);
 
 	return 0;
 }

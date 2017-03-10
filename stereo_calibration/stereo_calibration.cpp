@@ -23,13 +23,18 @@ using cv::Range;
 
 // Image input parameters
 #define IMAGE_FOLDER "images/"
+#define IMAGE_FOLDER_LEFT "images/calibration_left/"
+#define IMAGE_FOLDER_RIGHT "images/calibration_right/"
+#define IMAGE_FOLDER_STEREO "images/calibration_stereo/"
 #define IMAGE_LEFT_PREFIX "CalibrateL"
 #define IMAGE_RIGHT_PREFIX "CalibrateR" 
-#define IMAGE_TYPE ".bmp"
+#define IMAGE_TYPE ".jpg"
 
 // Display window parameters
 #define WINDOW_LEFT_CAMERA "Left Camera"
 #define WINDOW_RIGHT_CAMERA "Right Camera"
+#define IMAGE_FAST_WAIT 1
+#define IMAGE_SLOW_WAIT 5000
 
 // Chessboard parameters
 #define CHESSBOARD_ROWS 10
@@ -50,12 +55,12 @@ int main()
 	
 	// Create image data structures and load initial images
 	int image_number = 0;
-	string image_name = generateFilename(IMAGE_FOLDER, IMAGE_LEFT_PREFIX,
-		image_number, IMAGE_TYPE);
-	Mat right_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
-	image_name = generateFilename(IMAGE_FOLDER, IMAGE_RIGHT_PREFIX,
-		image_number, IMAGE_TYPE);
+	string image_name = generateFilename(IMAGE_FOLDER_LEFT, IMAGE_LEFT_PREFIX,
+			image_number, IMAGE_TYPE);
 	Mat left_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
+	image_name = generateFilename(IMAGE_FOLDER_RIGHT, IMAGE_RIGHT_PREFIX,
+			image_number, IMAGE_TYPE);
+	Mat right_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
 	image_number++;
 	Mat left_display, right_display;
 	
@@ -72,40 +77,93 @@ int main()
 	cv::imshow(WINDOW_LEFT_CAMERA, left_display);
 	cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
 
-	// Push images to calibration
+	// Calibrate left camera
 	while (image_number < 100) {
 		
 		// Read in next image
-		image_name = generateFilename(IMAGE_FOLDER, IMAGE_LEFT_PREFIX,
-			image_number, IMAGE_TYPE);
+		image_name = generateFilename(IMAGE_FOLDER_LEFT, IMAGE_LEFT_PREFIX,
+				image_number, IMAGE_TYPE);
 		left_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
-		image_name = generateFilename(IMAGE_FOLDER, IMAGE_RIGHT_PREFIX,
-			image_number, IMAGE_TYPE);
-		right_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
 		image_number++;
 
 		// Continue loop if no data in image
-		if(!right_image.data || !left_image.data) {
+		if(!left_image.data) {
 			cout << "Skipped image " << image_name << endl;
 			continue;
 		}
 		
 		// Add images to calibration sequence
 		stereo.left_camera.addCalibrationImage(left_image, left_display);
-		stereo.right_camera.addCalibrationImage(right_image, right_display);
 		
 		// Display image
 		cv::imshow(WINDOW_LEFT_CAMERA, left_display);
-		cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
 		
 		// Wait for keypress (display image)
-		cv::waitKey(1);
+		cv::waitKey(IMAGE_FAST_WAIT);
 	}
-	
+
 	// Run calibration
 	stereo.left_camera.runCalibration();
+
+	// Calibrate right camera
+	image_number = 0;
+	while (image_number < 100) {
+
+		// Read in next image
+		image_name = generateFilename(IMAGE_FOLDER_RIGHT, IMAGE_RIGHT_PREFIX,
+			image_number, IMAGE_TYPE);
+		right_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
+		image_number++;
+
+		// Continue loop if no data in image
+		if(!right_image.data) {
+			cout << "Skipped image " << image_name << endl;
+			continue;
+		}
+
+		// Add image to calibration sequence
+		stereo.right_camera.addCalibrationImage(right_image, right_display);
+
+		// Display image
+		cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
+
+		// Wait for keypress (display image)
+		cv::waitKey(IMAGE_FAST_WAIT);
+	}
+
+	// Run calibration
 	stereo.right_camera.runCalibration();
-	
+
+	// Calibrate stereo system
+	image_number = 0;
+	while (image_number < 100) {
+
+		// Read in next image
+		image_name = generateFilename(IMAGE_FOLDER_STEREO, IMAGE_LEFT_PREFIX,
+				image_number, IMAGE_TYPE);
+		left_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
+		image_name = generateFilename(IMAGE_FOLDER_STEREO, IMAGE_RIGHT_PREFIX,
+				image_number, IMAGE_TYPE);
+		right_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
+		image_number++;
+
+		// Continue loop if no data in image
+		if(!left_image.data || !right_image.data) {
+			cout << "Skipped image " << image_name << endl;
+			continue;
+		}
+
+		// Add image to calibration sequence
+		stereo.addCalibrationImage(left_image, right_image, left_display, right_display);
+
+		// Display image
+		cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
+		cv::imshow(WINDOW_LEFT_CAMERA, left_display);
+
+		// Wait for keypress (display image)
+		cv::waitKey(IMAGE_FAST_WAIT);
+	}
+
 	// Print camera calibration parameters
 	int rms = stereo.left_camera.getRMS();
 	cout << "left_rms = " << rms << endl;
@@ -166,7 +224,7 @@ int main()
 	// Display images and wait till keypress
 	cv::imshow(WINDOW_LEFT_CAMERA, left_display);
 	cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
-	cv::waitKey(0);
+	cv::waitKey(IMAGE_SLOW_WAIT);
 
 	// Write images to file
 	cv::imwrite("output/left_epipolar.jpg", left_display);
@@ -181,7 +239,7 @@ int main()
 	// Display rectified images
 	cv::imshow(WINDOW_LEFT_CAMERA, left_display);
 	cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
-	cv::waitKey(0);
+	cv::waitKey(IMAGE_SLOW_WAIT);
 
 	// Write images to file
 	cv::imwrite("output/left_rectify.jpg", left_display);
@@ -192,7 +250,7 @@ int main()
 	cv::absdiff(right_image, right_rectify, right_display);
 	cv::imshow(WINDOW_LEFT_CAMERA, left_display);
 	cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
-	cv::waitKey(0);
+	cv::waitKey(IMAGE_SLOW_WAIT);
 	
 	// Write images to file
 	cv::imwrite("output/left_absdiff.jpg", left_display);

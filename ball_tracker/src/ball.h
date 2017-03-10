@@ -17,6 +17,9 @@
 #define SEARCH_BOX_WIDTH 200
 #define SEARCH_BOX_HEIGHT 200
 
+// Ball detection parameters
+#define BALL_DETECTIONS_MAX 32
+
 // Position struct for ball position data
 typedef struct Position {
 	bool found;
@@ -33,8 +36,12 @@ class Ball
 	public:
 		// Public functions
 		Ball(cv::Mat left_background, cv::Mat right_background);
-		void detectBall(cv::Mat left_image, cv::Mat right_image,
+		bool detectBall(cv::Mat left_image, cv::Mat right_image,
 				cv::Mat& left_display, cv::Mat& right_dislay);
+		void getBackground(cv::Mat& left_image, cv::Mat& right_image);
+		void drawComposite(cv::Mat& left_image, cv::Mat& right_image);
+		std::vector<cv::Point2f> getBallsLeft();
+		std::vector<cv::Point2f> getBallsRight();
 
 	private:
 		// Private variables
@@ -57,6 +64,6 @@ class Ball
 				int right_y);
 		Position chooseComponent(cv::Mat centroids, cv::Mat stats,
 				cv::Point search_center);
-		void drawBall(cv::Mat& left_image, cv::Mat& right_image);
+		void drawBall(cv::Mat& image, Position ball);
 		void drawSearchRegion(cv::Mat& left_image, cv::Mat& right_image);
 };
