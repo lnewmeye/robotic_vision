@@ -51,30 +51,16 @@ The stereo calibration parameters computed for this camera are as follows.
 
 The following are the epipolar lines produced by the clibration.
 
-### Left Epipolar Lines
 ![Left Epipolar Lines](output/left_epipolar.jpg)
-
-### Right Epipolar Lines
 ![Right Epipolar Lines](output/right_epipolar.jpg)
 
 ## Task 4 - Rectification
 
-The following are the results of image rectification for the stereo system.
+The following are the results of image rectification for the stereo system. The first images are the original images followed by the rectified and absolute difference images.
 
-### Left Original Image
 ![Left Original Image](images/CalibrateL00.jpg)
-
-### Right Original Image
 ![Right Original Image](images/CalibrateR00.jpg)
-
-### Left Rectified Image
 ![Left Rectified Image](output/left_rectify.jpg)
-
-### Right Rectified Image
 ![Right Rectified Image](output/right_rectify.jpg)
-
-### Left Absolute Difference
 ![Left Absolute Difference](output/left_absdiff.jpg)
-
-### Right Absolute Difference
 ![Right Absolute Difference](output/right_absdiff.jpg)
