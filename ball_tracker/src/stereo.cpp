@@ -4,6 +4,9 @@
 
 #include "stereo.h"
 
+// For DEBUG
+#include <iostream>
+
 using cv::Size;
 using cv::Rect;
 
@@ -75,6 +78,28 @@ vector<Point2f> Stereo::rectifyPointRight(vector<Point2f> points)
 	return undistorted;
 }
 
+vector<Point3f> Stereo::transformPoints(vector<Point2f> points_left,
+		vector<Point2f> points_right)
+{
+	// Create vector for 3D points and transformed points
+	vector<Point3f> points3d, points_transformed;
+	Point3f point3d;
+
+	// Convert points from 2D to 3D
+	for (unsigned i = 0; i < points_left.size(); i++) {
+		point3d.x = points_left[i].x;
+		point3d.y = points_left[i].y;
+		point3d.z = points_left[i].x - points_right[i].x;
+		std::cout << "Point (2D) = " << points_left[i] << std::endl;
+		points3d.push_back(point3d);
+	}
+
+	// Transform points
+	cv::perspectiveTransform(points3d, points_transformed, disparity);
+	
+	return points_transformed;
+}
+
 void Stereo::setCalibration(Mat left_intrinsic, Mat left_distortion, Mat right_intrinsic, Mat right_distortion, Mat rotation, Mat translation, Mat essential, Mat fundamental)
 {
 	// Set parameters for left and right cameras
@@ -92,6 +117,9 @@ void Stereo::setCalibration(Mat left_intrinsic, Mat left_distortion, Mat right_i
 	this->translation = translation;
 	this->essential = essential;
 	this->fundamental = fundamental;
+
+	// Compute rectification of images
+	computeRectification();
 }
 
 void Stereo::computeRectification()

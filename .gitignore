@@ -12,6 +12,9 @@
 # vim ignores
 *.swp
 
+# ipython ignores
+*.ipynb_checkpoints/
+
 # Folder ignores
 #Debug/
 

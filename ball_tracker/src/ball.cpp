@@ -23,6 +23,7 @@ using cv::Rect;
 using cv::Point;
 using cv::Scalar;
 using cv::Point2f;
+using std::vector;
 
 Ball::Ball(Mat left_background, Mat right_background)
 {
@@ -150,10 +151,42 @@ void Ball::drawComposite(Mat& left_image, Mat& right_image)
 
 vector<Point2f> Ball::getBallsLeft()
 {
+	// Create output vector
+	vector<Point2f> balls;
+	Point2f ball;
+
+	// Iterate through left_balls
+	for (Position position : left_balls) {
+
+		// Save position to Point2f
+		ball.x = position.centroid_x;
+		ball.y = position.centroid_y;
+
+		// Push to vector
+		balls.push_back(ball);
+	}
+
+	return balls;
 }
 
-vector<Point2f> Ball::getBallsLeft()
+vector<Point2f> Ball::getBallsRight()
 {
+	// Create output vector
+	vector<Point2f> balls;
+	Point2f ball;
+
+	// Iterate through right_balls
+	for (Position position : right_balls) {
+
+		// Save position to Point2f
+		ball.x = position.centroid_x;
+		ball.y = position.centroid_y;
+
+		// Push to vector
+		balls.push_back(ball);
+	}
+
+	return balls;
 }
 
 void Ball::setSearchRegion(int left_x, int left_y, int right_x,
