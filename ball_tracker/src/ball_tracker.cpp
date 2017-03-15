@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <math.h>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include "stereo.h"
@@ -63,7 +64,7 @@ using cv::Point2f;
 #define IMAGE_RECONSTRUCTION_RIGHT "data/reconstruct_3d_right.jpg"
 #define CHESSBOARD_ROWS 10
 #define CHESSBOARD_COLUMNS 7
-#define PITCH_FOLDER "data/ball_pitch_2/"
+#define PITCH_FOLDER "data/ball_pitch_1/"
 #define PITCH_PREFIX_LEFT "PitchL"
 #define PITCH_PREFIX_RIGHT "PitchR"
 #define PITCH_IMAGE_TYPE ".jpg"
@@ -83,6 +84,7 @@ using cv::Point2f;
 #define WINDOW_RIGHT_CAMERA "Right Camera"
 
 // Functions for application
+void findTrajectory(vector<Point3f> points, Point3f& poly_x, Point3f& poly_y);
 string generateFilename(string folder, string prefix, int number, string type);
 vector<Point2f> getOuterCorners(vector<Point2f> corners);
 void drawCorners(Mat& image, vector<Point2f> corners);
@@ -188,6 +190,7 @@ int main()
 	// Setup variables for loop
 	vector<Point3f> trajectory;
 	vector<Point2f> left_balls, right_balls;
+	Point3f poly_x, poly_y;
 	char keypress = 0;
 	bool detected = false;
 	int output_number = 0;
@@ -209,6 +212,11 @@ int main()
 			printPointData(trajectory);
 
 			// Compute trajectory using least squares
+			if (trajectory.size() >= 3) {
+				findTrajectory(trajectory, poly_x, poly_y);
+				cout << "X trajectory: " << poly_x << endl;
+				cout << "Y trajectory: " << poly_y << endl;
+			}
 		}
 
 		// For now set image to display in window
@@ -269,6 +277,54 @@ int main()
 	printPointData(trajectory);
 
 	return 0;
+}
+
+void findTrajectory(vector<Point3f> points, Point3f& poly_x, Point3f& poly_y)
+{
+	// Create matrix structures
+	Mat A_x(points.size(), 3, CV_32FC1);
+	Mat b_x(points.size(), 1, CV_32FC1);
+	Mat A_y(points.size(), 3, CV_32FC1);
+	Mat b_y(points.size(), 1, CV_32FC1);
+
+	// Form points into matrix A and vector b
+	int index = 0;
+	float z1, z2, z3;
+	for (Point3f point : points) {
+
+		// Set values of z
+		z1 = 1;
+		z2 = point.z;
+		z3 = z2*z2;
+
+		// Set values in matricies for x trajectory
+		A_x.at<float>(index,0) = z3;
+		A_x.at<float>(index,1) = z2;
+		A_x.at<float>(index,2) = z1;
+		b_x.at<float>(index,0) = point.x;
+
+		// Set values in matricies for y trajectory
+		A_y.at<float>(index,0) = z3;
+		A_y.at<float>(index,1) = z2;
+		A_y.at<float>(index,2) = z1;
+		b_y.at<float>(index,0) = point.y;
+
+		// Update index
+		index++;
+	}
+
+	// Compute least squares solutions
+	Mat x, y;
+	cv::solve(A_x, b_x, x, cv::DECOMP_QR);
+	cv::solve(A_y, b_y, y, cv::DECOMP_QR);
+
+	// Translate output to Point3f type
+	poly_x.x = x.at<float>(0,0);
+	poly_x.y = x.at<float>(1,0);
+	poly_x.z = x.at<float>(2,0);
+	poly_y.x = y.at<float>(0,0);
+	poly_y.y = y.at<float>(1,0);
+	poly_y.z = y.at<float>(2,0);
 }
 
 string generateFilename(string folder, string prefix, int number, string type)
