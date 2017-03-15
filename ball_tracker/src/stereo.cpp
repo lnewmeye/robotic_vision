@@ -5,7 +5,7 @@
 #include "stereo.h"
 
 // For DEBUG
-#include <iostream>
+//#include <iostream>
 
 using cv::Size;
 using cv::Rect;
@@ -90,7 +90,6 @@ vector<Point3f> Stereo::transformPoints(vector<Point2f> points_left,
 		point3d.x = points_left[i].x;
 		point3d.y = points_left[i].y;
 		point3d.z = points_left[i].x - points_right[i].x;
-		std::cout << "Point (2D) = " << points_left[i] << std::endl;
 		points3d.push_back(point3d);
 	}
 

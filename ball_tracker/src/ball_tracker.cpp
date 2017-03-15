@@ -186,6 +186,8 @@ int main()
 	Ball ball(left_image, right_image);
 
 	// Setup variables for loop
+	vector<Point3f> trajectory;
+	vector<Point2f> left_balls, right_balls;
 	char keypress = 0;
 	bool detected = false;
 	int output_number = 0;
@@ -196,6 +198,18 @@ int main()
 		// Process image in ball object
 		detected = ball.detectBall(left_image, right_image, left_display,
 				right_display);
+
+		// Compute trajectory
+		if (detected) {
+
+			// Rectify and transform points
+			left_balls = stereo.rectifyPointLeft(ball.getBallsLeft());
+			right_balls = stereo.rectifyPointRight(ball.getBallsRight());
+			trajectory = stereo.transformPoints(left_balls, right_balls);
+			printPointData(trajectory);
+
+			// Compute trajectory using least squares
+		}
 
 		// For now set image to display in window
 		cv::imshow(WINDOW_LEFT_CAMERA, left_display);
@@ -243,8 +257,6 @@ int main()
 	cv::imwrite(image_name, right_display);
 
 	// Compute 3D trajectory of ball
-	vector<Point3f> trajectory;
-	vector<Point2f> left_balls, right_balls;
 	left_balls = stereo.rectifyPointLeft(ball.getBallsLeft());
 	cout << "unrectified" << endl;
 	printPointData2(ball.getBallsLeft());
