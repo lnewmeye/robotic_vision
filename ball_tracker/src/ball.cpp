@@ -13,9 +13,9 @@
 #include <opencv2/highgui.hpp>
 #define DEBUG_WINDOW_LEFT "Left Debug"
 #define DEBUG_WINDOW_RIGHT "Right Debug"
-//#define DEBUG_ABS_DIFF
+#define DEBUG_ABS_DIFF
 //#define DEBUG_THRESHOLD
-#define DEBUG_ERODE
+//#define DEBUG_ERODE
 #endif //DEBUG
 
 using cv::Mat;
@@ -25,7 +25,14 @@ using cv::Scalar;
 using cv::Point2f;
 using std::vector;
 
+Ball::Ball() {}
+
 Ball::Ball(Mat left_background, Mat right_background)
+{
+	initialize(left_background, right_background);
+}
+
+void Ball::initialize(Mat left_background, Mat right_background)
 {
 	// Save background images
 	this->left_background = left_background.clone();
@@ -53,6 +60,14 @@ Ball::Ball(Mat left_background, Mat right_background)
 bool Ball::detectBall(Mat left_image, Mat right_image,
 		Mat& left_display, Mat& right_display)
 {
+	// Set background if not set
+	if (left_background.empty() || right_background.empty()) {
+		initialize(left_image, right_image);
+		left_display = left_image;
+		right_display = right_image;
+		return false;
+	}
+
 	// Select search region of image
 	Mat left_region = left_image(left_search);
 	Mat right_region = right_image(right_search);
@@ -125,6 +140,11 @@ bool Ball::detectBall(Mat left_image, Mat right_image,
 				right_ball.centroid_x, right_ball.centroid_y);
 		left_balls.push_back(left_ball);
 		right_balls.push_back(right_ball);
+	}
+
+	if (!(left_ball.found || right_ball.found)) {
+		left_background = left_image.clone();
+		right_background = right_image.clone();
 	}
 
 	return detected;

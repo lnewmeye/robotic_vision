@@ -36,7 +36,9 @@ class Ball
 {
 	public:
 		// Public functions
+		Ball();
 		Ball(cv::Mat left_background, cv::Mat right_background);
+		void initialize(cv::Mat left_background, cv::Mat right_background);
 		bool detectBall(cv::Mat left_image, cv::Mat right_image,
 				cv::Mat& left_display, cv::Mat& right_dislay);
 		void getBackground(cv::Mat& left_image, cv::Mat& right_image);
@@ -55,6 +57,8 @@ class Ball
 		cv::Point right_search_center;
 		Position left_ball;
 		Position right_ball;
+		Position left_ball_previous;
+		Position right_ball_previous;
 		std::vector<Position> left_balls;
 		std::vector<Position> right_balls;
 		int image_height;

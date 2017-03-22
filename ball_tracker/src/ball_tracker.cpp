@@ -64,7 +64,7 @@ using cv::Point2f;
 #define IMAGE_RECONSTRUCTION_RIGHT "data/reconstruct_3d_right.jpg"
 #define CHESSBOARD_ROWS 10
 #define CHESSBOARD_COLUMNS 7
-#define PITCH_FOLDER "data/ball_pitch_1/"
+#define PITCH_FOLDER "data/ball_pitch_3/"
 #define PITCH_PREFIX_LEFT "PitchL"
 #define PITCH_PREFIX_RIGHT "PitchR"
 #define PITCH_IMAGE_TYPE ".jpg"
@@ -82,6 +82,8 @@ using cv::Point2f;
 // Display window parameters
 #define WINDOW_LEFT_CAMERA "Left Camera"
 #define WINDOW_RIGHT_CAMERA "Right Camera"
+#define WAIT_TIME_FAST 300
+#define WAIT_TIME_SLOW 0
 
 // Functions for application
 void findTrajectory(vector<Point3f> points, Point3f& poly_x, Point3f& poly_y);
@@ -102,7 +104,7 @@ int main()
 	Mat right_image = cv::imread(IMAGE_RECONSTRUCTION_RIGHT, cv::IMREAD_GRAYSCALE);
 	Size image_size = left_image.size();
 	Size pattern_size = Size(CHESSBOARD_ROWS, CHESSBOARD_COLUMNS);
- 
+
 	// Setup matricies for calibration parameters
 	Mat left_intrinsic = (cv::Mat_<double>(3,3) << CALIBRATION_LEFT_INTRINSIC);
 	Mat left_distortion = (cv::Mat_<double>(5,1) << CALIBRATION_LEFT_DISTORTION);
@@ -139,7 +141,7 @@ int main()
 	drawCorners(right_display, right_corners);
 	cv::imshow(WINDOW_LEFT_CAMERA, left_display);
 	cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
-	cv::waitKey(0);
+	cv::waitKey(WAIT_TIME_SLOW);
 
 	// Save images
 	string folder = OUTPUT_FOLDER;
@@ -168,7 +170,7 @@ int main()
 	drawCorners(right_display, right_corners_undistort);
 	cv::imshow(WINDOW_LEFT_CAMERA, left_display);
 	cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
-	cv::waitKey(0);
+	cv::waitKey(WAIT_TIME_SLOW);
 
 	// Transform points and print data
 	vector<Point3f> left_corners_transform;
@@ -185,7 +187,7 @@ int main()
 			image_number, PITCH_IMAGE_TYPE);
 	right_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
 	image_number++;
-	Ball ball(left_image, right_image);
+	Ball ball;
 
 	// Setup variables for loop
 	vector<Point3f> trajectory;
@@ -222,7 +224,7 @@ int main()
 		// For now set image to display in window
 		cv::imshow(WINDOW_LEFT_CAMERA, left_display);
 		cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
-		keypress = cv::waitKey(300);
+		keypress = cv::waitKey(WAIT_TIME_FAST);
 
 		// Write image output
 		if (detected) {
@@ -252,7 +254,7 @@ int main()
 	ball.drawComposite(left_display, right_display);
 	cv::imshow(WINDOW_LEFT_CAMERA, left_display);
 	cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
-	cv::waitKey(0);
+	cv::waitKey(WAIT_TIME_SLOW);
 
 	// Write image output
 	folder = OUTPUT_FOLDER;

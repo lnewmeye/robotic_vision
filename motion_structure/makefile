@@ -3,8 +3,8 @@
 TARGET = motion_structure
 SRC = src/
 BIN = bin/
-CCLASS = 
-CLASS = 
+CCLASS = $(SRC)Motion.cpp
+HCLASS = $(SRC)Motion.h
 
 CXX=g++
 CFLAGS = -std=c++11 -Wall
