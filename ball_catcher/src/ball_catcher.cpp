@@ -60,6 +60,8 @@ using cv::Point2f;
 		-0.001380984238462987, 0.1242142714653703, 1
 
 // Defines for image input data
+#define IMAGE_RECONSTRUCTION_LEFT "data/reconstruct_3d_left.jpg"
+#define IMAGE_RECONSTRUCTION_RIGHT "data/reconstruct_3d_right.jpg"
 #define CHESSBOARD_ROWS 10
 #define CHESSBOARD_COLUMNS 7
 #define PITCH_FOLDER "data/ball_pitch_3/"
@@ -68,8 +70,13 @@ using cv::Point2f;
 #define PITCH_IMAGE_TYPE ".jpg"
 
 // Defines for image output data
+#define OUTPUT_FOLDER "output/"
 #define OUTPUT_PREFIX_LEFT "track_left"
 #define OUTPUT_PREFIX_RIGHT "track_right"
+
+// Define image parameters
+#define IMAGE_WIDTH 640
+#define IMAGE_HEIGHT 480
 
 // Display window parameters
 #define WINDOW_LEFT_CAMERA "Left Camera"
@@ -90,7 +97,7 @@ int main()
 	cv::namedWindow(WINDOW_RIGHT_CAMERA, CV_WINDOW_AUTOSIZE);
 
 	Mat left_image, right_image;
-	Size image_size = left_image.size();
+	Size image_size(IMAGE_HEIGHT, IMAGE_WIDTH);
 	Size pattern_size = Size(CHESSBOARD_ROWS, CHESSBOARD_COLUMNS);
 
 	// Setup matricies for calibration parameters
@@ -141,11 +148,9 @@ int main()
 
 			// Rectify and transform points
 			left_balls = stereo.rectifyPointLeft(ball.getBallsLeft());
-			cout << "left_balls[0] = " << left_balls[0] << endl;
-			//printPointData2(left_balls);
 			right_balls = stereo.rectifyPointRight(ball.getBallsRight());
 			trajectory = stereo.transformPoints(left_balls, right_balls);
-			//printPointData(trajectory);
+			printPointData(trajectory);
 
 			// Compute trajectory using least squares
 			if (trajectory.size() >= 3) {
@@ -169,19 +174,6 @@ int main()
 		right_image = cv::imread(image_name, cv::IMREAD_GRAYSCALE);
 		image_number++;
 	}
-
-	// Draw composite image
-	//ball.getBackground(left_image, right_image);
-	//cv::cvtColor(left_image, left_display, CV_GRAY2BGR);
-	//cv::cvtColor(right_image, right_display, CV_GRAY2BGR);
-	//ball.drawComposite(left_display, right_display);
-	//cv::imshow(WINDOW_LEFT_CAMERA, left_display);
-	//cv::imshow(WINDOW_RIGHT_CAMERA, right_display);
-	//cv::waitKey(WAIT_TIME_SLOW);
-
-	// Compute 3D trajectory of ball
-	//right_balls = stereo.rectifyPointRight(ball.getBallsRight());
-	//trajectory = stereo.transformPoints(left_balls, right_balls);
 
 	return 0;
 }
@@ -263,4 +255,3 @@ void printPointData2(vector<Point2f> corners)
 		cout << corner << endl;
 	}
 }
-

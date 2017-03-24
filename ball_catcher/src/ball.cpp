@@ -13,9 +13,10 @@
 #include <opencv2/highgui.hpp>
 #define DEBUG_WINDOW_LEFT "Left Debug"
 #define DEBUG_WINDOW_RIGHT "Right Debug"
-#define DEBUG_ABS_DIFF
+//#define DEBUG_ABS_DIFF
 //#define DEBUG_THRESHOLD
 //#define DEBUG_ERODE
+//#define DEBUG_DISPLAY
 #endif //DEBUG
 
 using cv::Mat;
@@ -83,6 +84,7 @@ bool Ball::detectBall(Mat left_image, Mat right_image,
 #ifdef DEBUG_ABS_DIFF
 	cv::imshow(DEBUG_WINDOW_LEFT, left_diff);
 	cv::imshow(DEBUG_WINDOW_RIGHT, right_diff);
+	//TODO: Add waitKey here
 #endif //DEBUG_ABS_DIFF
 
 	// Threshold absdiff image
@@ -94,6 +96,7 @@ bool Ball::detectBall(Mat left_image, Mat right_image,
 #ifdef DEBUG_THRESHOLD
 	cv::imshow(DEBUG_WINDOW_LEFT, left_threshold);
 	cv::imshow(DEBUG_WINDOW_RIGHT, right_threshold);
+	//TODO: Add waitKey here
 #endif //DEBUG_THRESHOLD
 
 	// Erode edges to remove noise
@@ -105,6 +108,7 @@ bool Ball::detectBall(Mat left_image, Mat right_image,
 #ifdef DEBUG_ERODE
 	cv::imshow(DEBUG_WINDOW_LEFT, left_erode);
 	cv::imshow(DEBUG_WINDOW_RIGHT, right_erode);
+	//TODO: Add waitKey here
 #endif //DEBUG_ERODE
 
 	// Get statistics of image using connected components
@@ -146,6 +150,12 @@ bool Ball::detectBall(Mat left_image, Mat right_image,
 		left_background = left_image.clone();
 		right_background = right_image.clone();
 	}
+
+#ifdef DEBUG_DISPLAY
+	cv::imshow(DEBUG_WINDOW_LEFT, left_display);
+	cv::imshow(DEBUG_WINDOW_RIGHT, right_display);
+	//TODO: Add waitKey here
+#endif
 
 	return detected;
 }
