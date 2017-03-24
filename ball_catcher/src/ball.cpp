@@ -186,6 +186,7 @@ vector<Point2f> Ball::getBallsLeft()
 		balls.push_back(ball);
 	}
 
+	std::cout << "Ball position[0]: " << balls[0] << std::endl;
 	return balls;
 }
 

@@ -80,6 +80,8 @@ using cv::Point2f;
 // Functions for application
 void findTrajectory(vector<Point3f> points, Point3f& poly_x, Point3f& poly_y);
 string generateFilename(string folder, string prefix, int number, string type);
+void printPointData(vector<Point3f> corners);
+void printPointData2(vector<Point2f> corners);
 
 int main()
 {
@@ -139,6 +141,8 @@ int main()
 
 			// Rectify and transform points
 			left_balls = stereo.rectifyPointLeft(ball.getBallsLeft());
+			cout << "left_balls[0] = " << left_balls[0] << endl;
+			//printPointData2(left_balls);
 			right_balls = stereo.rectifyPointRight(ball.getBallsRight());
 			trajectory = stereo.transformPoints(left_balls, right_balls);
 			//printPointData(trajectory);
@@ -246,4 +250,17 @@ string generateFilename(string folder, string prefix, int number, string type)
         return folder + prefix + value + type;
 }
 
+void printPointData(vector<Point3f> corners)
+{
+	for(Point3f corner : corners) {
+		cout << corner << endl;
+	}
+}
+
+void printPointData2(vector<Point2f> corners)
+{
+	for(Point2f corner : corners) {
+		cout << corner << endl;
+	}
+}
 
