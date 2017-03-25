@@ -6,6 +6,9 @@
 
 // DEBUG define (comment out when not needed)
 #define DEBUG
+#ifdef DEBUG
+#include <iostream>
+#endif
 
 // Standard namespaces used
 using std::vector;
@@ -17,6 +20,11 @@ using cv::Rect;
 using cv::Point;
 using cv::Scalar;
 using cv::Point2f;
+
+Motion::Motion()
+{
+	image_size = Size(IMAGE_WIDTH, IMAGE_HEIGHT);
+}
 
 void Motion::setInitial(Mat image)
 {
@@ -51,8 +59,12 @@ void Motion::addFrame(Mat image)
 	// Match points between images
 	flow_corners = opticalMatchingFine(previous_image, image, corners);
 	tracked_corners.push_back(flow_corners);
-	cv::findFundamentalMat(corners, flow_corners, cv::FM_RANSAC,
+	F = cv::findFundamentalMat(corners, flow_corners, cv::FM_8POINT,
 			3, 0.99, mask);
+
+	// Add fundamental matrix to vector of measurements
+	std::cout << "F =" << std::endl << F << std::endl;
+	F_measurement.push_back(F.clone());
 
 	// Remove corners not matching between imges
 	for (int j = mask.size(); j > 0; j--) {
@@ -193,3 +205,62 @@ void Motion::drawMotion(Mat& image, vector<Point2f> corners,
 	}
 }
 
+Mat Motion::averageIntrinsic()
+{
+	// Reset matrix F with zeros
+	F = cv::Mat_<double>::zeros(3, 3);
+
+	// Iterate through measured parameters and sum
+	for (Mat measurement : F_measurement) {
+		F = F + measurement;
+	}
+
+	// Average measurements out
+	F = F / (double)F_measurement.size();
+
+	return F.clone();
+}
+
+void Motion::rectifyImage(Mat& display1, Mat& display2)
+{
+	// Note: this function is designed specifically for task 1 of
+	// assignment 6 robotic vision. It estimates both intrinsic and
+	// extrinsic parameters
+
+	// Average intrinsic parameters to get best fundamental matrix
+	averageIntrinsic();
+
+	// Form camera matrix M
+	M = cv::Mat_<double>::zeros(3, 3);
+	M.at<double>(0,0) = IMAGE_FOCAL_GUESS;
+	M.at<double>(1,1) = IMAGE_FOCAL_GUESS;
+	M.at<double>(0,2) = IMAGE_CENTER_GUESS_X;
+	M.at<double>(1,2) = IMAGE_CENTER_GUESS_Y;
+
+	// Form distortion matrix D
+	D = (cv::Mat_<double>(5,1) << IMAGE_DISTORTION_GUESS);
+
+	// Stereo rectify points in first and last images
+	vector<Point2f> first_points = tracked_corners.front();
+	vector<Point2f> last_points = tracked_corners.back();
+	cv::stereoRectifyUncalibrated(first_points, last_points, F,
+			image_size, H1, H2);
+
+	// Transform homogrophies to rectifications
+	cv::solve(M, H1*M, R1, cv::DECOMP_LU);
+	cv::solve(M, H2*M, R2, cv::DECOMP_LU);
+
+	// Rectify images
+	Mat map1[2], map2[2];
+	// TODO: Figure out what should be the "newCameraMatrix"
+	cv::initUndistortRectifyMap(M, D, R1, M,  image_size, CV_16SC2,
+			map1[0], map1[1]);
+	cv::initUndistortRectifyMap(M, D, R2, M,  image_size, CV_16SC2,
+			map2[0], map2[1]);
+
+	// Remap image
+	Mat image1 = previous_images.front();
+	Mat image2 = previous_images.back();
+	cv::remap(image1, display1, map1[0], map1[1], cv::INTER_LINEAR); 
+	cv::remap(image2, display2, map2[0], map2[1], cv::INTER_LINEAR);	
+}

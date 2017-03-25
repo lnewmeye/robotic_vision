@@ -31,7 +31,8 @@ using cv::Mat;
 #define TASK 1 // Options: 1, 2, or 3
 
 // Parameters for display window
-#define DISPLAY_WINDOW "Display Window"
+#define DISPLAY_WINDOW_1 "Display Window 1"
+#define DISPLAY_WINDOW_2 "Display Window 2"
 #define DISPLAY_TIME_FAST 1
 #define DISPLAY_TIME_SLOW 0
 
@@ -61,9 +62,9 @@ int main()
 {
 	// Create windows and objects for project
 	VideoCapture image_sequence;
-	Mat image, display;
+	Mat image, display, display1, display2;
 	int keypress;
-	cv::namedWindow(DISPLAY_WINDOW, CV_WINDOW_AUTOSIZE);
+	cv::namedWindow(DISPLAY_WINDOW_1, CV_WINDOW_AUTOSIZE);
 	Motion motion;
 
 	// Create debug window (if defined)
@@ -100,7 +101,7 @@ int main()
 		#endif
 
 		// Display, wait, and load next image
-		cv::imshow(DISPLAY_WINDOW, display);
+		cv::imshow(DISPLAY_WINDOW_1, display);
 		keypress = cv::waitKey(DISPLAY_TIME_FAST);
 		image_sequence >> image;
 	}
@@ -108,11 +109,22 @@ int main()
 	// Get images with motion displayed and display
 	vector<Mat> display_images = motion.getMotionImages();
 	for (Mat display_image : display_images) {
-		cv::imshow(DISPLAY_WINDOW, display_image);
+		cv::imshow(DISPLAY_WINDOW_1, display_image);
 		keypress = cv::waitKey(DISPLAY_TIME_SLOW);
 		if (keypress == 'q')
 			break;
 	}
+
+	// Output averaged intrinsic parameters
+	Mat F = motion.averageIntrinsic();
+	cout << "Averaged intrinsic parameters:" << endl;
+	cout << "F =" << endl << F << endl;
+
+	// Rectify image based on guess of parameters (task 1)
+	motion.rectifyImage(display1, display2);
+	cv::imshow (DISPLAY_WINDOW_1, display1);
+	cv::imshow (DISPLAY_WINDOW_2, display2);
+	cv::waitKey(DISPLAY_TIME_SLOW);
 
 	return 0;
 }
