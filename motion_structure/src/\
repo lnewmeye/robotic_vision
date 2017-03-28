@@ -35,9 +35,9 @@ Motion::Motion()
 void Motion::reset()
 {
 	// Empty vectors
-	tracked_corners.clear();
-	previous_images.clear();
-	F_measurement.clear();
+	tracked_corners.empty();
+	previous_images.empty();
+	F_measurement.empty();
 
 	// Reset matricies
 	F.release();
@@ -90,7 +90,7 @@ void Motion::addFrame(Mat image)
 
 	// Add fundamental matrix to vector of measurements
 	F_measurement.push_back(F.clone());
-	//std::cout << "F =" << std::endl << F << std::endl;
+	std::cout << "F =" << std::endl << F << std::endl;
 
 	// Remove corners not matching between imges
 	for (int j = mask.size(); j > 0; j--) {
@@ -191,14 +191,6 @@ vector<Point2f> Motion::opticalMatchingFine(Mat& initial, Mat& image,
 
 vector<Mat> Motion::getMotionImages()
 {
-	// Temporary fix TODO: remove this
-	//tracked_corners.erase(tracked_corners.begin(), tracked_corners.begin()+1);
-	//previous_images.erase(previous_images.begin(), previous_images.begin()+1);
-	//F_measurement.erase(F_measurement.begin(), F_measurement.begin()+1);
-	//tracked_corners.erase(tracked_corners.begin()+7, tracked_corners.end());
-	//previous_images.erase(previous_images.begin()+7, previous_images.end());
-	//F_measurement.erase(F_measurement.begin()+7, F_measurement.end());
-
 	// Create vector of images to be returned
 	vector<Point2f> corners, flow_corners;
 	vector<Mat> display;
@@ -212,9 +204,13 @@ vector<Mat> Motion::getMotionImages()
 		flow_corners = tracked_corners[i];
 		cv::cvtColor(previous_images[i-1], image, CV_GRAY2BGR);
 
+		std::cout << "Function here" << std::endl;
+
 		// Draw image and push to vector
 		drawMotion(image, flow_corners, corners);
 		display.push_back(image.clone());
+
+		std::cout << "Function here 2" << std::endl;
 	}
 
 	return display;
@@ -310,36 +306,6 @@ void Motion::rectifyImage(Mat& display1, Mat& display2)
 	drawHorizontalLines(display1);
 	drawHorizontalLines(display2);
 }
-
-void Motion::findEssential()
-{
-	// Load intrinsic and distortion parameters
-	D = (cv::Mat_<double>(5,1) << IMAGE_DISTORTION_KNOWN);
-	M = (cv::Mat_<double>(3,3) << IMAGE_INTRINSIC_KNOWN);
-
-	// Compute essential matrix
-	Mat Mt;
-	cv::transpose(M, Mt);
-	E = Mt * F * M;
-
-	// Perform SVD on essential matrix
-	Mat W, U, V, Vt;
-	cv::SVD::compute(E, W, U, Vt);
-	cv::transpose(Vt, V);
-
-	// Find rotation and translation using cv::recoverPose()
-	vector<Point2f> first_points = tracked_corners.front();
-	vector<Point2f> last_points = tracked_corners.back();
-	cv::recoverPose(E, first_points, last_points, M, R, T);
-}
-
-Mat Motion::getFundamental() { return F; }
-
-Mat Motion::getEssential() { return E; }
-
-Mat Motion::getRotation() { return R; }
-
-Mat Motion::getTranslation() { return T; }
 
 void Motion::drawHorizontalLines(Mat& image)
 {
