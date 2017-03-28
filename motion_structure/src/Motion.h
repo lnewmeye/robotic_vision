@@ -64,6 +64,11 @@ class Motion
 		cv::Mat getEssential();
 		cv::Mat getRotation();
 		cv::Mat getTranslation();
+		cv::Mat getIntrinsic();
+		cv::Mat getHomography1();
+		cv::Mat getHomography2();
+		cv::Mat getRectification1();
+		cv::Mat getRectification2();
 
 		// Object get functions
 		std::vector<cv::Mat> getMotionImages();

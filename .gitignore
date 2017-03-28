@@ -30,5 +30,6 @@
 camera_calibration/camera_calibration
 stereo_calibration/stereo_calibration
 ball_tracker/bin
-motion_field/bin
 ball_catcher/bin
+motion_structure/bin
+motion_field/bin

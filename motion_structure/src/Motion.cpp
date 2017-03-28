@@ -184,21 +184,13 @@ vector<Point2f> Motion::opticalMatchingFine(Mat& initial, Mat& image,
 	Size zero_zone(-1,-1);
 	cv::TermCriteria subpix_criteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 
 			40, 0.001);
-	cv::cornerSubPix(image, matches, subpix_size, zero_zone, subpix_criteria);
+	//cv::cornerSubPix(image, matches, subpix_size, zero_zone, subpix_criteria);
 
 	return matches;
 }
 
 vector<Mat> Motion::getMotionImages()
 {
-	// Temporary fix TODO: remove this
-	//tracked_corners.erase(tracked_corners.begin(), tracked_corners.begin()+1);
-	//previous_images.erase(previous_images.begin(), previous_images.begin()+1);
-	//F_measurement.erase(F_measurement.begin(), F_measurement.begin()+1);
-	//tracked_corners.erase(tracked_corners.begin()+7, tracked_corners.end());
-	//previous_images.erase(previous_images.begin()+7, previous_images.end());
-	//F_measurement.erase(F_measurement.begin()+7, F_measurement.end());
-
 	// Create vector of images to be returned
 	vector<Point2f> corners, flow_corners;
 	vector<Mat> display;
@@ -332,6 +324,16 @@ void Motion::findEssential()
 	vector<Point2f> last_points = tracked_corners.back();
 	cv::recoverPose(E, first_points, last_points, M, R, T);
 }
+
+Mat Motion::getIntrinsic() { return M; }
+
+Mat Motion::getHomography1() { return H1; }
+
+Mat Motion::getHomography2() { return H2; }
+
+Mat Motion::getRectification1() { return R1; }
+
+Mat Motion::getRectification2() { return R2; }
 
 Mat Motion::getFundamental() { return F; }
 

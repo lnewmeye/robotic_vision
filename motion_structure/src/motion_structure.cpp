@@ -28,8 +28,8 @@ using cv::Mat;
 // Parameters for display window
 #define DISPLAY_WINDOW_1 "Display Window 1"
 #define DISPLAY_WINDOW_2 "Display Window 2"
-#define DISPLAY_TIME_FAST 0
-#define DISPLAY_TIME_SLOW 0
+#define DISPLAY_TIME_FAST 1
+#define DISPLAY_TIME_SLOW 1
 
 // Parameters for image input
 #define IMAGE_TRACKING_1 "data/parallel_cube/ParallelCube%01d.jpg"
@@ -114,6 +114,7 @@ int main()
 		}
 
 		// Rectify image based on guess of parameters (Task 1)
+		Mat M, H1, H2, R1, R2;
 		motion.rectifyImage(display1, display2);
 		cv::imshow (DISPLAY_WINDOW_1, display1);
 		cv::imshow (DISPLAY_WINDOW_2, display2);
@@ -122,6 +123,16 @@ int main()
 		cv::imwrite(output_last.front(), display2);
 		output_first.pop();
 		output_last.pop();
+		M = motion.getIntrinsic();
+		H1 = motion.getHomography1();
+		H2 = motion.getHomography2();
+		R1 = motion.getRectification1();
+		R2 = motion.getRectification2();
+		cout << "M =" << endl << M << endl;
+		cout << "H1 =" << endl << H1 << endl;
+		cout << "H2 =" << endl << H2 << endl;
+		cout << "R1 =" << endl << R1 << endl;
+		cout << "R2 =" << endl << R2 << endl;
 
 		// Compute essential matrix (Task 2)
 		Mat F, E, R, T;
