@@ -5,7 +5,7 @@
 #include "Motion.h"
 
 // DEBUG define (comment out when not needed)
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #include <iostream>
 #include <opencv2/highgui.hpp>
@@ -22,6 +22,7 @@ using cv::Rect;
 using cv::Point;
 using cv::Scalar;
 using cv::Point2f;
+using cv::Point3f;
 
 Motion::Motion()
 {
@@ -83,6 +84,9 @@ void Motion::addFrame(Mat image)
 	uchar match;
 
 	// Match points between images
+	//cv::calcOpticalFlowPyrLK(previous_image, image, corners, flow2,
+			//status2, error, flow_size, OPTICAL_FLOW_LEVEL,
+			//flow_criteria, 0, 0.001);
 	flow_corners = opticalMatchingFine(previous_image, image, corners);
 	tracked_corners.push_back(flow_corners);
 	F = cv::findFundamentalMat(corners, flow_corners, cv::FM_RANSAC,
@@ -93,7 +97,7 @@ void Motion::addFrame(Mat image)
 	//std::cout << "F =" << std::endl << F << std::endl;
 
 	// Remove corners not matching between imges
-	for (int j = mask.size(); j > 0; j--) {
+	for (unsigned j = mask.size(); j > 0; j--) {
 
 		// Pop off from mask
 		match = mask.back();
@@ -103,6 +107,15 @@ void Motion::addFrame(Mat image)
 		if (!match) {
 			for (unsigned k = 0; k < tracked_corners.size(); k++) {
 				tracked_corners[k].erase(tracked_corners[k].begin()+j-1);
+			}
+		}
+	}
+
+	// Remove corners that go to far to right
+	for (unsigned j = tracked_corners.back().size(); j > 0; j--) {
+		if (tracked_corners.back()[j].x > 590) {
+			for (unsigned k = 0; k < tracked_corners.size(); k++) {
+				tracked_corners[k].erase(tracked_corners[k].begin()+j);
 			}
 		}
 	}
@@ -270,17 +283,12 @@ void Motion::rectifyImage(Mat& display1, Mat& display2)
 	// Stereo rectify points in first and last images
 	vector<Point2f> first_points = tracked_corners.front();
 	vector<Point2f> last_points = tracked_corners.back();
-	//vector<Point2f> last_points = tracked_corners[1];
 	cv::stereoRectifyUncalibrated(first_points, last_points, F,
 			image_size, H1, H2);
 
 	// Transform homogrophies to rectifications
 	cv::solve(M, H1*M, R1, cv::DECOMP_LU);
 	cv::solve(M, H2*M, R2, cv::DECOMP_LU);
-	//Mat M_inv;
-	//cv::invert(M, M_inv);
-	//R1 = M_inv * H1 * M;
-	//R2 = M_inv * H2 * M;
 
 	// Rectify images
 	Mat map1[2], map2[2];
@@ -292,7 +300,6 @@ void Motion::rectifyImage(Mat& display1, Mat& display2)
 	// Remap image
 	Mat image1 = previous_images.front();
 	Mat image2 = previous_images.back();
-	//Mat image2 = previous_images[1];
 	cv::remap(image1, display1, map1[0], map1[1], cv::INTER_LINEAR); 
 	cv::remap(image2, display2, map2[0], map2[1], cv::INTER_LINEAR);	
 
@@ -305,7 +312,16 @@ void Motion::rectifyImage(Mat& display1, Mat& display2)
 
 void Motion::findEssential()
 {
+	// Note: this function is designed specifically for task 2 of
+	// assignment 6 robotic vision. It computes the essential matrix
+	// and additional parameters
+
 	// Load intrinsic and distortion parameters
+	vector<uchar> mask;
+	vector<Point2f> corners = tracked_corners.front();
+	vector<Point2f> flow_corners = tracked_corners.back();
+	F = cv::findFundamentalMat(corners, flow_corners, cv::FM_RANSAC,
+			3, 0.99, mask);
 	D = (cv::Mat_<double>(5,1) << IMAGE_DISTORTION_KNOWN);
 	M = (cv::Mat_<double>(3,3) << IMAGE_INTRINSIC_KNOWN);
 
@@ -323,6 +339,88 @@ void Motion::findEssential()
 	vector<Point2f> first_points = tracked_corners.front();
 	vector<Point2f> last_points = tracked_corners.back();
 	cv::recoverPose(E, first_points, last_points, M, R, T);
+}
+
+vector<Point3f> Motion::findMotion(Mat& display1, Mat& display2)
+{
+	// Note: this function is designed specifically for task 3 of
+	// assignment 6 robotic vision. It estimates motion of select
+	// points in the first and last images
+
+	// Select points on first and final image
+	vector<Point2f> first_points = tracked_corners.front();
+	vector<Point2f> last_points = tracked_corners.back();
+	int index1, index2, index3, index4;
+	index1 = 42; index2 = 1; index3 = 2; index4 = 0;
+	vector<Point2f> motion1, motion2;
+	vector<Point2f> undistort1, undistort2;
+	motion1.push_back(first_points[index1]);
+	motion1.push_back(first_points[index2]);
+	motion1.push_back(first_points[index3]);
+	motion1.push_back(first_points[index4]);
+	motion2.push_back(last_points[index1]);
+	motion2.push_back(last_points[index2]);
+	motion2.push_back(last_points[index3]);
+	motion2.push_back(last_points[index4]);
+
+	// Draw points on first and last images
+	Scalar color(0, 0, 255);
+	cv::cvtColor(previous_images.front(), display1, cv::COLOR_GRAY2BGR);
+	cv::cvtColor(previous_images.back(), display2, cv::COLOR_GRAY2BGR);
+	cv::circle(display1, first_points[index1], 3, color, -1);
+	cv::circle(display2, last_points[index1], 3, color, -1);
+	cv::circle(display1, first_points[index2], 3, color, -1);
+	cv::circle(display2, last_points[index2], 3, color, -1);
+	cv::circle(display1, first_points[index3], 3, color, -1);
+	cv::circle(display2, last_points[index3], 3, color, -1);
+	cv::circle(display1, first_points[index4], 3, color, -1);
+	cv::circle(display2, last_points[index4], 3, color, -1);
+
+	// Undistort points
+	cv::undistortPoints(motion1, undistort1, M, D);
+	cv::undistortPoints(motion2, undistort2, M, D);
+
+	// Construct homography matrix
+	H = cv::Mat_<double>(4,4);
+	H.at<double>(0,0) = R.at<double>(0,0);
+	H.at<double>(0,1) = R.at<double>(0,1);
+	H.at<double>(0,2) = R.at<double>(0,2);
+	H.at<double>(1,0) = R.at<double>(1,0);
+	H.at<double>(1,1) = R.at<double>(1,1);
+	H.at<double>(1,2) = R.at<double>(1,2);
+	H.at<double>(2,0) = R.at<double>(2,0);
+	H.at<double>(2,1) = R.at<double>(2,1);
+	H.at<double>(2,2) = R.at<double>(2,2);
+	H.at<double>(0,3) = T.at<double>(0,0);
+	H.at<double>(1,3) = T.at<double>(1,0);
+	H.at<double>(2,3) = T.at<double>(2,0);
+	H.at<double>(3,0) = 0;
+	H.at<double>(3,1) = 0;
+	H.at<double>(3,2) = 0;
+	H.at<double>(3,3) = 1;
+
+	// Find disparity of points
+	vector<Point3f> disparity;
+	Point3f point;
+	for (unsigned i = 0; i < undistort1.size(); i++) {
+		point.x = undistort1[i].x;
+		point.y = undistort1[i].y;
+		point.z = cv::norm(Mat(undistort1[i]), Mat(undistort2[i]));
+		disparity.push_back(point);
+	}
+
+	// Transform points
+	vector<Point3f> points_3d;
+	cv::perspectiveTransform(disparity, points_3d, H);
+
+	// Scale points
+	double scale = 48.48005972240689;
+	points_3d[0] *= scale;
+	points_3d[1] *= scale;
+	points_3d[2] *= scale;
+	points_3d[3] *= scale;
+
+	return points_3d;
 }
 
 Mat Motion::getIntrinsic() { return M; }

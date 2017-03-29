@@ -194,3 +194,18 @@ The following are the rotation, translation, essential, and fundamental matricie
 
 ## Task 3 - Known Intrinsic and Extrinsic Parameters
 
+### Parallel Cube
+
+![Parallel Cube Points](../output/parallel_cube_points.jpg)
+
+### Parallel Real
+
+![Parallel Real Points](../output/parallel_real_points.jpg)
+
+### Turned Cube
+
+![Turned Cube Points](../output/turned_cube_points.jpg)
+
+### Turned Real
+
+![Turned Real Points](../output/turned_real_points.jpg)

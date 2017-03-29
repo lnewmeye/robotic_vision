@@ -23,13 +23,16 @@ using std::string;
 
 // OpenCV namespaces used by default
 using cv::VideoCapture;
+using cv::Point2f;
+using cv::Point3f;
 using cv::Mat;
 
 // Parameters for display window
 #define DISPLAY_WINDOW_1 "Display Window 1"
 #define DISPLAY_WINDOW_2 "Display Window 2"
 #define DISPLAY_TIME_FAST 1
-#define DISPLAY_TIME_SLOW 1
+#define DISPLAY_TIME_MEDIUM 100
+#define DISPLAY_TIME_SLOW 0
 
 // Parameters for image input
 #define IMAGE_TRACKING_1 "data/parallel_cube/ParallelCube%01d.jpg"
@@ -46,6 +49,10 @@ using cv::Mat;
 #define OUTPUT_RECTIFY_LAST_3 "output/turned_cube_last.jpg"
 #define OUTPUT_RECTIFY_FIRST_4 "output/turned_real_first.jpg"
 #define OUTPUT_RECTIFY_LAST_4 "output/turned_real_last.jpg"
+#define OUTPUT_POINTS_1 "output/parallel_cube_points.jpg"
+#define OUTPUT_POINTS_2 "output/parallel_real_points.jpg"
+#define OUTPUT_POINTS_3 "output/turned_cube_points.jpg"
+#define OUTPUT_POINTS_4 "output/turned_real_points.jpg"
 
 int main()
 {
@@ -73,6 +80,11 @@ int main()
 	output_last.push(OUTPUT_RECTIFY_LAST_2);
 	output_last.push(OUTPUT_RECTIFY_LAST_3);
 	output_last.push(OUTPUT_RECTIFY_LAST_4);
+	queue<string> output_points;
+	output_points.push(OUTPUT_POINTS_1);
+	output_points.push(OUTPUT_POINTS_2);
+	output_points.push(OUTPUT_POINTS_3);
+	output_points.push(OUTPUT_POINTS_4);
 
 	// Iterate through image names and operate on sequence
 	for (string image_name : image_names) {
@@ -108,7 +120,7 @@ int main()
 		vector<Mat> display_images = motion.getMotionImages();
 		for (Mat display_image : display_images) {
 			cv::imshow(DISPLAY_WINDOW_1, display_image);
-			keypress = cv::waitKey(DISPLAY_TIME_SLOW);
+			keypress = cv::waitKey(DISPLAY_TIME_MEDIUM);
 			if (keypress == 'q')
 				break;
 		}
@@ -147,6 +159,14 @@ int main()
 		cout << "T =" << endl << T << endl;
 
 		// Find 3d info (Task 3)
+		vector<Point3f> points;
+		points = motion.findMotion(display1, display2);
+		cout << "3D Points:" << endl << points << endl;
+		cv::imshow(DISPLAY_WINDOW_1, display1);
+		cv::imshow(DISPLAY_WINDOW_2, display2);
+		cv::waitKey(DISPLAY_TIME_SLOW);
+		cv::imwrite(output_points.front(), display1);
+		output_points.pop();
 
 		// Reset for next sequence
 		motion.reset();

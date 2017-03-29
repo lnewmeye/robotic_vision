@@ -10,8 +10,8 @@
 
 // Motion class defines
 #define MOTION_CORNER_QUANTITY 1000
-#define MOTION_CORNER_QUALITY 0.01
-#define MOTION_CORNER_DISTANCE 2
+#define MOTION_CORNER_QUALITY 0.001
+#define MOTION_CORNER_DISTANCE 20
 
 // Parameters for template matching task
 #define MATCH_SELECTION_WIDTH 120
@@ -60,6 +60,8 @@ class Motion
 		cv::Mat averageIntrinsic();
 		void rectifyImage(cv::Mat& display, cv::Mat& display2);
 		void findEssential();
+		std::vector<cv::Point3f> findMotion(cv::Mat& display1, 
+				cv::Mat& display2);
 		cv::Mat getFundamental();
 		cv::Mat getEssential();
 		cv::Mat getRotation();
@@ -96,4 +98,5 @@ class Motion
 		cv::Mat D;  // Distortion matrix
 		cv::Mat R;  // Rotation matrix
 		cv::Mat T;  // Translation matrix
+		cv::Mat H;  // Homography
 };
