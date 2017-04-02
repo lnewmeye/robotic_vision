@@ -61,13 +61,13 @@ void Motion::setInitial(Mat image)
 	// Stup constants used for corner identification
 	Size SUBPIX_SIZE(5,5);
 	Size ZERO_ZONE(-1,-1);
-	cv::TermCriteria SUBPIX_CRITERIA(CV_TERMCRIT_EPS + 
+	cv::TermCriteria SUBPIX_CRITERIA(CV_TERMCRIT_EPS +
 			CV_TERMCRIT_ITER, 40, 0.001);
 
 	// Find features to track in image
 	vector<Point2f> corners_found;
 	cv::goodFeaturesToTrack(image, corners_found, MOTION_CORNER_QUANTITY,
-			MOTION_CORNER_QUALITY, MOTION_CORNER_DISTANCE); 
+			MOTION_CORNER_QUALITY, MOTION_CORNER_DISTANCE);
 	cv::cornerSubPix(image, corners_found, SUBPIX_SIZE, ZERO_ZONE,
 			SUBPIX_CRITERIA);
 
@@ -198,7 +198,7 @@ vector<Point2f> Motion::opticalMatchingFine(Mat& initial, Mat& image,
 	// Resolve corner find grain location
 	Size subpix_size(12,12);
 	Size zero_zone(-1,-1);
-	cv::TermCriteria subpix_criteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 
+	cv::TermCriteria subpix_criteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER,
 			40, 0.001);
 	//cv::cornerSubPix(image, matches, subpix_size, zero_zone, subpix_criteria);
 
@@ -228,7 +228,7 @@ vector<Mat> Motion::getMotionImages()
 	return display;
 }
 
-void Motion::drawMotion(Mat& image, vector<Point2f> corners, 
+void Motion::drawMotion(Mat& image, vector<Point2f> corners,
 	vector<Point2f> flow)
 {
 	// Create variables for loop
@@ -303,8 +303,8 @@ void Motion::rectifyImage(Mat& display1, Mat& display2)
 	// Remap image
 	Mat image1 = previous_images.front();
 	Mat image2 = previous_images.back();
-	cv::remap(image1, display1, map1[0], map1[1], cv::INTER_LINEAR); 
-	cv::remap(image2, display2, map2[0], map2[1], cv::INTER_LINEAR);	
+	cv::remap(image1, display1, map1[0], map1[1], cv::INTER_LINEAR);
+	cv::remap(image2, display2, map2[0], map2[1], cv::INTER_LINEAR);
 
 	// Convert to BGR and draw horizontal lines
 	cv::cvtColor(display1, display1, cv::COLOR_GRAY2BGR);
@@ -598,4 +598,32 @@ void Motion::drawHorizontalLines(Mat& image)
 		point2 = Point(IMAGE_WIDTH-1, i*LINE_SPACING);
 		cv::line(image, point1, point2, color);
 	}
+}
+
+void jeffCode()
+{
+	// perform stereo rectification virtually make both image planes the same
+	// frame. Q is the 4x4 disparity-to-depth mapping matrix
+	Mat P1, P2, Q;
+	stereoRectify(  intrinsic, distortion,
+									intrinsic, distortion,
+									img_a.size(),  R,  t,
+									R1, R2, P1, P2, Q  );
+
+	// our points are already undistorted
+	// populate vector of Point3f by cycling through each point
+	std::vector<Point3f> points3d_a, points3d_b;
+	for (int kk=0; kk < features_ua.size() ; kk++)
+	{
+		points3d_a.push_back(Point3f(features_ua[kk].x, features_ua[kk].y, features_ua[kk].x-features_ub[kk].x));
+		points3d_b.push_back(Point3f(features_ub[kk].x, features_ub[kk].y, features_ua[kk].x-features_ub[kk].x));
+	}
+
+	// transform the points to calculate 3D information of 4 points
+	perspectiveTransform(points3d_a, points3d_a, Q);
+	perspectiveTransform(points3d_b, points3d_b, Q);
+
+	// the points3d_a and points3d_b are the 3d estimates of the points
+	// from the perspective of each camera, correlated with
+	// features_keep_a and features_b
 }
