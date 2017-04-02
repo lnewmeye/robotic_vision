@@ -5,7 +5,7 @@
 #include "Motion.h"
 
 // DEBUG define (comment out when not needed)
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 #include <iostream>
 #include <opencv2/highgui.hpp>
@@ -19,10 +19,13 @@ using std::vector;
 using cv::Mat;
 using cv::Size;
 using cv::Rect;
+using cv::Vec2d;
+using cv::Vec4d;
 using cv::Point;
 using cv::Scalar;
 using cv::Point2f;
 using cv::Point3f;
+using cv::Point3d;
 
 Motion::Motion()
 {
@@ -341,7 +344,7 @@ void Motion::findEssential()
 	cv::recoverPose(E, first_points, last_points, M, R, T);
 }
 
-vector<Point3f> Motion::findMotion(Mat& display1, Mat& display2)
+vector<Point3d> Motion::findMotion(Mat& display1, Mat& display2)
 {
 	// Note: this function is designed specifically for task 3 of
 	// assignment 6 robotic vision. It estimates motion of select
@@ -381,45 +384,188 @@ vector<Point3f> Motion::findMotion(Mat& display1, Mat& display2)
 	cv::undistortPoints(motion2, undistort2, M, D);
 
 	// Construct homography matrix
-	H = cv::Mat_<double>(4,4);
-	H.at<double>(0,0) = R.at<double>(0,0);
-	H.at<double>(0,1) = R.at<double>(0,1);
-	H.at<double>(0,2) = R.at<double>(0,2);
-	H.at<double>(1,0) = R.at<double>(1,0);
-	H.at<double>(1,1) = R.at<double>(1,1);
-	H.at<double>(1,2) = R.at<double>(1,2);
-	H.at<double>(2,0) = R.at<double>(2,0);
-	H.at<double>(2,1) = R.at<double>(2,1);
-	H.at<double>(2,2) = R.at<double>(2,2);
-	H.at<double>(0,3) = T.at<double>(0,0);
-	H.at<double>(1,3) = T.at<double>(1,0);
-	H.at<double>(2,3) = T.at<double>(2,0);
-	H.at<double>(3,0) = 0;
-	H.at<double>(3,1) = 0;
-	H.at<double>(3,2) = 0;
-	H.at<double>(3,3) = 1;
+	//H = cv::findHomography(undistort1, undistort2);
+	//std::cout << "H =" << std::endl << H << std::endl;
+	//H = cv::Mat_<double>(4,4);
+	//H.at<double>(0,0) = R.at<double>(0,0);
+	//H.at<double>(0,1) = R.at<double>(0,1);
+	//H.at<double>(0,2) = R.at<double>(0,2);
+	//H.at<double>(1,0) = R.at<double>(1,0);
+	//H.at<double>(1,1) = R.at<double>(1,1);
+	//H.at<double>(1,2) = R.at<double>(1,2);
+	//H.at<double>(2,0) = R.at<double>(2,0);
+	//H.at<double>(2,1) = R.at<double>(2,1);
+	//H.at<double>(2,2) = R.at<double>(2,2);
+	//H.at<double>(0,3) = T.at<double>(0,0);
+	//H.at<double>(1,3) = T.at<double>(1,0);
+	//H.at<double>(2,3) = T.at<double>(2,0);
+	//H.at<double>(3,0) = 0;
+	//H.at<double>(3,1) = 0;
+	//H.at<double>(3,2) = 0;
+	//H.at<double>(3,3) = 1;
+
+	//R1 = cv::Mat_<double>(3,4);
+	//R1.at<double>(0,0) = R.at<double>(0,0);
+	//R1.at<double>(0,1) = R.at<double>(0,1);
+	//R1.at<double>(0,2) = R.at<double>(0,2);
+	//R1.at<double>(1,0) = R.at<double>(1,0);
+	//R1.at<double>(1,1) = R.at<double>(1,1);
+	//R1.at<double>(1,2) = R.at<double>(1,2);
+	//R1.at<double>(2,0) = R.at<double>(2,0);
+	//R1.at<double>(2,1) = R.at<double>(2,1);
+	//R1.at<double>(2,2) = R.at<double>(2,2);
+	//R1.at<double>(3,0) = T.at<double>(0,0);
+	//R1.at<double>(3,1) = T.at<double>(0,1);
+	//R1.at<double>(3,2) = T.at<double>(0,2);
+	//R1 = M*R1;
+
+	//R2 = cv::Mat_<double>(3,4);
+	//R2.at<double>(0,0) = 1;
+	//R2.at<double>(0,1) = 0;
+	//R2.at<double>(0,2) = 0;
+	//R2.at<double>(1,0) = 0;
+	//R2.at<double>(1,1) = 1;
+	//R2.at<double>(1,2) = 0;
+	//R2.at<double>(2,0) = 0;
+	//R2.at<double>(2,1) = 0;
+	//R2.at<double>(2,2) = 1;
+	//R2.at<double>(3,0) = 0;
+	//R2.at<double>(3,1) = 0;
+	//R2.at<double>(3,2) = 0;
+	//R2 = M*R2;
 
 	// Find disparity of points
-	vector<Point3f> disparity;
-	Point3f point;
-	for (unsigned i = 0; i < undistort1.size(); i++) {
-		point.x = undistort1[i].x;
-		point.y = undistort1[i].y;
-		point.z = cv::norm(Mat(undistort1[i]), Mat(undistort2[i]));
-		disparity.push_back(point);
-	}
+	//vector<Point3f> disparity;
+	//Point3f point;
+	//Mat triangle1(1,4,CV_64FC2);
+	//Mat triangle2(1,4,CV_64FC2);
+	//for (unsigned i = 0; i < undistort1.size(); i++) {
+		//triangle1.at<Vec2d>(0,i)[0] = undistort1[i].x;
+		//triangle1.at<Vec2d>(0,i)[1] = undistort1[i].y;
+		//triangle2.at<Vec2d>(0,i)[0] = undistort2[i].x;
+		//triangle2.at<Vec2d>(0,i)[1] = undistort2[i].y;
+		//Vec2d row = triangle1.at<Vec2d>(0,i);
+		//row[0] = undistort1[i].x;
+		//row[1] = undistort1[i].y;
+		//row = triangle2.at<Vec2d>(0,i);
+		//row[0] = undistort2[i].x;
+		//row[1] = undistort2[i].y;
+		//Mat triangle1.at<double>(i,0) = undistort1[i].x;
+		//Mat triangle1.at<double>(i,1) = undistort1[i].x;
+		//point.x = undistort1[i].x;
+		//point.y = undistort1[i].y;
+		//point.z = cv::norm(Mat(undistort1[i]), Mat(undistort2[i]));
+		//disparity.push_back(point);
+	//}
 
 	// Transform points
-	vector<Point3f> points_3d;
-	cv::perspectiveTransform(disparity, points_3d, H);
+	//vector<Point3f> points_3d;
+	//Mat points_3d(1,4,CV_64FC4);
+	//cv::perspectiveTransform(disparity, points_3d, H);
+	//cv::triangulatePoints(R1, R2, triangle1, triangle2, points_3d);
 
 	// Scale points
-	double scale = 48.48005972240689;
-	points_3d[0] *= scale;
-	points_3d[1] *= scale;
-	points_3d[2] *= scale;
-	points_3d[3] *= scale;
+	//double scale = 1.0;
+	//points_3d[0] *= scale;
+	//points_3d[1] *= scale;
+	//points_3d[2] *= scale;
+	//points_3d[3] *= scale;
 
+	//vector<Point3f> output;
+	//for (int i = 0; i < points_3d.rows; i++) {
+		//Vec4d row = points_3d.at<Vec4d>(0,i);
+		//Point3f point;
+		//point.x = row[0];
+		//point.y = row[1];
+		//point.z = row[2];
+		//output.push_back(point*scale);
+	//}
+
+	// Create variables needed to solve linear set of equations
+	Mat A, b, x;
+	Mat b1, b2, b3;
+	Mat r1, r2, r3;
+	Mat c1, c2, c3;
+	double f;
+	Point2f point_l, point_r;
+	Point3d point_3d;
+	vector<Point3d> points_3d;
+	double xr, yr, xl, yl;
+
+	double scale = -38.350840455358046;
+
+	for (unsigned i = 0; i < undistort1.size(); i++) {
+
+		// Select point to be solved
+		point_l = undistort1[i];
+		point_r = undistort2[i];
+
+		// Set values for scalars
+		f = M.at<double>(0,0);
+		xl = point_l.x;
+		yl = point_l.y;
+		xr = point_r.x;
+		yr = point_r.y;
+
+		// Set values for columns of R
+		r1 = cv::Mat_<double>(1,3);
+		r1.at<double>(0,0) = R.at<double>(0,0);
+		r1.at<double>(0,1) = R.at<double>(0,1);
+		r1.at<double>(0,2) = R.at<double>(0,2);
+		r2 = cv::Mat_<double>(1,3);
+		r2.at<double>(0,0) = R.at<double>(1,0);
+		r2.at<double>(0,1) = R.at<double>(1,1);
+		r2.at<double>(0,2) = R.at<double>(1,2);
+		r3 = cv::Mat_<double>(1,3);
+		r3.at<double>(0,0) = R.at<double>(2,0);
+		r3.at<double>(0,1) = R.at<double>(2,1);
+		r3.at<double>(0,2) = R.at<double>(2,2);
+
+		// Setup matrix A for solution
+		c1 = (xr * r3) - (f * r1);
+		c2 = (yr * r2) - (f * r1);
+		c3 = cv::Mat_<double>(1,3);
+		c3.at<double>(0,0) = -f;
+		c3.at<double>(0,1) = -f;
+		c3.at<double>(0,2) = xl+yl;
+		A = cv::Mat_<double>(3,3);
+		A.at<double>(0,0) = c1.at<double>(0,0);
+		A.at<double>(0,1) = c1.at<double>(0,1);
+		A.at<double>(0,2) = c1.at<double>(0,2);
+		A.at<double>(1,0) = c2.at<double>(0,0);
+		A.at<double>(1,1) = c2.at<double>(0,1);
+		A.at<double>(1,2) = c2.at<double>(0,2);
+		A.at<double>(2,0) = c3.at<double>(0,0);
+		A.at<double>(2,1) = c3.at<double>(0,1);
+		A.at<double>(2,2) = c3.at<double>(0,2);
+
+		std::cout << "A =" << std::endl << A << std::endl;
+
+		// Setup matrix b for solutin
+		b1 = cv::Mat_<double>(1,1);
+		b1 = ((xr * r3) - (f * r1)) * T;
+		b2 = cv::Mat_<double>(1,1);
+		b2 = ((yr * r2) - (f * r1)) * T;
+		b3 = cv::Mat_<double>(1,1);
+		b3.at<double>(0,0) = 0;
+		b = cv::Mat_<double>(3,1);
+		b.at<double>(0,0) = b1.at<double>(0,0);
+		b.at<double>(1,0) = b2.at<double>(0,0);
+		b.at<double>(2,0) = b3.at<double>(0,0);
+
+		std::cout << "b =" << std::endl << b << std::endl;
+
+		// Solve for point
+		cv::solve(A, b, x);
+		point_3d.x = x.at<double>(0,0) * scale;
+		point_3d.y = x.at<double>(0,1) * scale;
+		point_3d.z = x.at<double>(0,2) * scale;
+		points_3d.push_back(point_3d);
+
+		std::cout << "x =" << std::endl << x << std::endl;
+	}
+
+	//return output;
 	return points_3d;
 }
 

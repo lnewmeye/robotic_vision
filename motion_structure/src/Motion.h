@@ -60,7 +60,7 @@ class Motion
 		cv::Mat averageIntrinsic();
 		void rectifyImage(cv::Mat& display, cv::Mat& display2);
 		void findEssential();
-		std::vector<cv::Point3f> findMotion(cv::Mat& display1, 
+		std::vector<cv::Point3d> findMotion(cv::Mat& display1, 
 				cv::Mat& display2);
 		cv::Mat getFundamental();
 		cv::Mat getEssential();
