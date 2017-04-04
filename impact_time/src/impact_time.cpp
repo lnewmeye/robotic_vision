@@ -40,6 +40,7 @@ int main()
 
 	// Read in first image and set as initial image
 	image_sequence >> image;
+	cv::cvtColor(image, image, CV_BGR2GRAY);
 	impact_detector.setInitial(image);
 	image_sequence >> image;
 

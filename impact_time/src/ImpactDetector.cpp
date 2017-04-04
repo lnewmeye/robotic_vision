@@ -16,13 +16,11 @@ using cv::Scalar;
 
 void ImpactDetector::setInitial(cv::Mat image)
 {
-	std::cout << "Made it here" << std::endl;
 	// Find features on image
 	vector<Point2d> initial_corners;
 	cv::goodFeaturesToTrack(image, initial_corners, IMPACT_CORNER_MAX,
 			IMPACT_CORNER_QUALITY, IMPACT_CORNER_DISTANCE);
 
-	std::cout << "Made it here" << std::endl;
 	// Push corners found and image to interior data structures
 	previous_images.push_back(image.clone());
 	previous_corners.push_back(initial_corners);
@@ -30,12 +28,14 @@ void ImpactDetector::setInitial(cv::Mat image)
 
 void ImpactDetector::detectImpact(cv::Mat image, cv::Mat& display)
 {
+	std::cout << "Made it here -1" << std::endl;
 	// Find matched features on image
 	Mat previous_image = previous_images.back();
 	vector<Point2d> last_corners = previous_corners.back();
 	vector<Point2d> new_corners;
 	vector<uchar> status;
 	vector<double> error;
+	std::cout << "Made it here" << std::endl;
 	cv::calcOpticalFlowPyrLK(previous_image, image, last_corners,
 			new_corners, status, error);
 
