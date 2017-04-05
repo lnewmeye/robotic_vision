@@ -47,7 +47,7 @@ int main()
 	// Read in image data, convert color, process, and display
 	while(!image.empty() && keypress != 'q') {
 
-		// Conver image color to gray scale
+		// Convert image color to gray scale and process
 		cv::cvtColor(image, image, CV_BGR2GRAY);
 		impact_detector.detectImpact(image, display);
 

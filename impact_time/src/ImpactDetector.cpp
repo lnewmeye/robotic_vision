@@ -11,13 +11,13 @@
 
 using std::vector;
 using cv::Mat;
-using cv::Point2d;
+using cv::Point2f;
 using cv::Scalar;
 
 void ImpactDetector::setInitial(cv::Mat image)
 {
 	// Find features on image
-	vector<Point2d> initial_corners;
+	vector<Point2f> initial_corners;
 	cv::goodFeaturesToTrack(image, initial_corners, IMPACT_CORNER_MAX,
 			IMPACT_CORNER_QUALITY, IMPACT_CORNER_DISTANCE);
 
@@ -28,22 +28,26 @@ void ImpactDetector::setInitial(cv::Mat image)
 
 void ImpactDetector::detectImpact(cv::Mat image, cv::Mat& display)
 {
-	std::cout << "Made it here -1" << std::endl;
 	// Find matched features on image
 	Mat previous_image = previous_images.back();
-	vector<Point2d> last_corners = previous_corners.back();
-	vector<Point2d> new_corners;
-	vector<uchar> status;
-	vector<double> error;
-	std::cout << "Made it here" << std::endl;
+	vector<Point2f> last_corners = previous_corners.back();
+	vector<Point2f> new_corners;
+	vector<unsigned char> status;
+	vector<float> error;
 	cv::calcOpticalFlowPyrLK(previous_image, image, last_corners,
 			new_corners, status, error);
 
 	// Remove bad corners
+	for (unsigned i = status.size(); i > 0; i--) {
+		if (status[i] == 0) {
+			std::cout << "Remove point " << new_corners[i] << std::endl;
+			//for (unsigned j = 0; j < previous_images.size(); j++) {
+				//previous_corners[j].erase(previous_corners[j].begin()+j-1);
+			//}
+		}
+	}
 
-	std::cout << "Made it here" << std::endl;
-
-	// Draw corners on image
+	// Draw new corners on image
 	Scalar color(0, 0, 255);
 	cv::cvtColor(image, display, CV_GRAY2BGR);
 	drawCorners(display, new_corners, color);
@@ -56,10 +60,10 @@ void ImpactDetector::detectImpact(cv::Mat image, cv::Mat& display)
 }
 
 void ImpactDetector::drawCorners(cv::Mat& image, 
-		std::vector<cv::Point2d> corners, cv::Scalar color)
+		std::vector<cv::Point2f> corners, cv::Scalar color)
 {
 	// Iterate through corners and draw on image
-	for (Point2d corner : corners) {
+	for (Point2f corner : corners) {
 		cv::circle(image, corner, IMPACT_CORNER_DRAW_SIZE, color, -1);
 	}
 }

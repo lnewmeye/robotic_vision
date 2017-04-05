@@ -13,6 +13,9 @@
 
 #define IMPACT_CORNER_DRAW_SIZE 4
 
+#define IMPACT_CAMERA_CENTER_X 320
+#define IMPACT_CAMERA_CENTER_Y 240
+
 class ImpactDetector
 {
 	public:
@@ -20,12 +23,12 @@ class ImpactDetector
 		void detectImpact(cv::Mat image, cv::Mat& display);
 
 	private:
-		void removeBadCorners(std::vector<cv::Point2d>* corners,
+		void removeBadCorners(std::vector<cv::Point2f>* corners,
 				std::vector<uchar> status);
-		void drawCorners(cv::Mat& image, std::vector<cv::Point2d> corners, 
+		void drawCorners(cv::Mat& image, std::vector<cv::Point2f> corners, 
 				cv::Scalar color);
 
 		// Priavate data structures
 		std::vector<cv::Mat> previous_images;
-		std::vector<std::vector<cv::Point2d>> previous_corners;
+		std::vector<std::vector<cv::Point2f>> previous_corners;
 };
