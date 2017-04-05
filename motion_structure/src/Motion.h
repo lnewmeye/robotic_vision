@@ -7,17 +7,22 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
 #include <vector>
+#include <math.h>
 
 // Motion class defines
 #define MOTION_CORNER_QUANTITY 1000
 #define MOTION_CORNER_QUALITY 0.001
-#define MOTION_CORNER_DISTANCE 20
+#define MOTION_CORNER_DISTANCE 4
 
 // Parameters for template matching task
 #define MATCH_SELECTION_WIDTH 120
 #define MATCH_SELECTION_HEIGHT 120
 #define MATCH_BLOCK_WIDTH 60
 #define MATCH_BLOCK_HEIGHT 60
+//#define MATCH_SELECTION_WIDTH 240
+//#define MATCH_SELECTION_HEIGHT 240
+//#define MATCH_BLOCK_WIDTH 120
+//#define MATCH_BLOCK_HEIGHT 120
 
 // Guessed parameters (for Task 1)
 #define IMAGE_CENTER_GUESS_X 320
@@ -99,4 +104,7 @@ class Motion
 		cv::Mat R;  // Rotation matrix
 		cv::Mat T;  // Translation matrix
 		cv::Mat H;  // Homography
+		cv::Mat P1;
+		cv::Mat P2;
+		cv::Mat Q;  // Disparity matrix
 };

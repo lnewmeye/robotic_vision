@@ -69,22 +69,22 @@ int main()
 	vector<string> image_names;
 	image_names.push_back(IMAGE_TRACKING_1);
 	image_names.push_back(IMAGE_TRACKING_2);
-	image_names.push_back(IMAGE_TRACKING_3);
+	//image_names.push_back(IMAGE_TRACKING_3);
 	image_names.push_back(IMAGE_TRACKING_4);
 	queue<string> output_first;
 	output_first.push(OUTPUT_RECTIFY_FIRST_1);
 	output_first.push(OUTPUT_RECTIFY_FIRST_2);
-	output_first.push(OUTPUT_RECTIFY_FIRST_3);
+	//output_first.push(OUTPUT_RECTIFY_FIRST_3);
 	output_first.push(OUTPUT_RECTIFY_FIRST_4);
 	queue<string> output_last;
 	output_last.push(OUTPUT_RECTIFY_LAST_1);
 	output_last.push(OUTPUT_RECTIFY_LAST_2);
-	output_last.push(OUTPUT_RECTIFY_LAST_3);
+	//output_last.push(OUTPUT_RECTIFY_LAST_3);
 	output_last.push(OUTPUT_RECTIFY_LAST_4);
 	queue<string> output_points;
 	output_points.push(OUTPUT_POINTS_1);
 	output_points.push(OUTPUT_POINTS_2);
-	output_points.push(OUTPUT_POINTS_3);
+	//output_points.push(OUTPUT_POINTS_3);
 	output_points.push(OUTPUT_POINTS_4);
 
 	// Iterate through image names and operate on sequence
@@ -102,8 +102,6 @@ int main()
 		// Read in next image and begin loop
 		image_sequence >> image;
 		keypress = 0;
-
-		cout << "Made it here -1" << endl;
 
 		// Loop while images available
 		while(image.data && keypress != 'q') {
@@ -128,8 +126,6 @@ int main()
 				break;
 		}
 
-		cout << "Made it here" << endl;
-
 		// Rectify image based on guess of parameters (Task 1)
 		Mat M, H1, H2, R1, R2;
 		motion.rectifyImage(display1, display2);
@@ -151,8 +147,6 @@ int main()
 		cout << "R1 =" << endl << R1 << endl;
 		cout << "R2 =" << endl << R2 << endl;
 
-		cout << "Made it here 2" << endl;
-
 		// Compute essential matrix (Task 2)
 		Mat F, E, R, T;
 		motion.findEssential();
@@ -165,8 +159,6 @@ int main()
 		cout << "R =" << endl << R << endl;
 		cout << "T =" << endl << T << endl;
 
-		cout << "Made it here 3" << endl;
-
 		// Find 3d info (Task 3)
 		vector<Point3d> points;
 		points = motion.findMotion(display1, display2);
@@ -176,8 +168,6 @@ int main()
 		cv::waitKey(DISPLAY_TIME_SLOW);
 		cv::imwrite(output_points.front(), display1);
 		output_points.pop();
-
-		cout << "Made it here 4" << endl;
 
 		// Reset for next sequence
 		motion.reset();
