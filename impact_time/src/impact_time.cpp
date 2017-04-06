@@ -41,7 +41,14 @@ int main()
 	// Read in first image and set as initial image
 	image_sequence >> image;
 	cv::cvtColor(image, image, CV_BGR2GRAY);
-	impact_detector.setInitial(image);
+	impact_detector.setInitial(image, display);
+
+	// Display output from first image
+	imshow(DISPLAY_WINDOW, display);
+	keypress = cv::waitKey(DISPLAY_TIME_FAST);
+	double impact_frames;
+
+	// read in next image
 	image_sequence >> image;
 
 	// Read in image data, convert color, process, and display
@@ -49,7 +56,9 @@ int main()
 
 		// Convert image color to gray scale and process
 		cv::cvtColor(image, image, CV_BGR2GRAY);
-		impact_detector.detectImpact(image, display);
+		impact_frames = impact_detector.detectImpact(image, display);
+		//cout << "impact_frames = " << impact_frames << endl;
+		cout << impact_frames << endl;
 
 		// Display image
 		cv::imshow(DISPLAY_WINDOW, display);
