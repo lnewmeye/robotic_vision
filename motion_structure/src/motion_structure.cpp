@@ -169,6 +169,11 @@ int main()
 		cv::imwrite(output_points.front(), display1);
 		output_points.pop();
 
+		// Output matched image (Bonus)
+		display1 = motion.getMatchedImage();
+		cv::imshow(DISPLAY_WINDOW_1, display1);
+		cv::waitKey(DISPLAY_TIME_SLOW);
+
 		// Reset for next sequence
 		motion.reset();
 		cout << endl;

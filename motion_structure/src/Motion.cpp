@@ -26,6 +26,7 @@ using cv::Scalar;
 using cv::Point2f;
 using cv::Point3f;
 using cv::Point3d;
+using cv::KeyPoint;
 
 Motion::Motion()
 {
@@ -230,6 +231,35 @@ vector<Mat> Motion::getMotionImages()
 	}
 
 	return display;
+}
+
+Mat Motion::getMatchedImage()
+{
+	// Translate first points to type KeyPoint()
+	vector<Point2f> corners_first = tracked_corners.front();
+	vector<KeyPoint> matches_first;
+	for (Point2f point : corners_first) {
+		matches_first.push_back(KeyPoint(point, 1.0));
+	}
+
+	// Translate last points to type KeyPoint()
+	vector<Point2f> corners_last = tracked_corners.back();
+	vector<KeyPoint> matches_last;
+	for (Point2f point : corners_last) {
+		matches_last.push_back(KeyPoint(point, 1.0));
+	}
+
+	// Match keypoints on images
+	Mat image_matched;
+	vector<cv::DMatch> empty;
+	Mat image_first = previous_images.front();
+	Mat image_last = previous_images.back();
+	cv::drawMatches(image_first, matches_first, image_last,
+			matches_last, empty, image_matched, Scalar(0,0,255),
+			Scalar(0,255,0), vector<char>(), 
+			cv::DrawMatchesFlags::DEFAULT);
+
+	return image_matched;
 }
 
 void Motion::drawMotion(Mat& image, vector<Point2f> corners,
