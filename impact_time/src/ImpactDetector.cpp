@@ -4,7 +4,7 @@
 
 #include "ImpactDetector.hpp"
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #include <iostream>
 #endif
@@ -71,7 +71,8 @@ double ImpactDetector::detectImpact(cv::Mat image, cv::Mat& display)
 	previous_ratios.push_back(ratio);
 
 	// Estimate time to impact
-	double frames = estimateFrames(previous_ratios);
+	//double frames = estimateFrames(previous_ratios);
+	double distance = estimateDistance(new_corners);
 
 	// Push back corners found and image
 	previous_images.push_back(image);
@@ -82,9 +83,8 @@ double ImpactDetector::detectImpact(cv::Mat image, cv::Mat& display)
 	cv::cvtColor(image, display, CV_GRAY2BGR);
 	drawCorners(display, new_corners, color);
 
-	// Draw display image 
-
-	return frames;
+	//return frames;
+	return distance;
 }
 
 vector<double> ImpactDetector::findDistances(vector<Point2f> points)
@@ -153,15 +153,37 @@ double ImpactDetector::estimateFrames(vector<double> ratios)
 		// Solve for x
 		cv::solve(A, b, x, cv::DECOMP_QR);
 
-		//std::cout << "A =" << std::endl << A << std::endl;
-		//std::cout << "b =" << std::endl << b << std::endl;
-		//std::cout << "x =" << std::endl << x << std::endl;
-
 		// Compute expected impact in frames
 		frames = -x.at<double>(1,0) / x.at<double>(0,0);
 	}
 
 	return frames;
+}
+
+double ImpactDetector::estimateDistance(std::vector<cv::Point2f> corners)
+{
+	// Set smallest and largest values to 0
+	double x_small = 640;
+	double x_large = 0;
+
+	// Find smallest and largest values of x
+	for (Point2f corner : corners) {
+
+		// Update smallest corner if smaller than current
+		if (corner.x < x_small)
+			x_small = corner.x;
+
+		// Update largest corner if larger than current
+		if (corner.x > x_large)
+			x_large = corner.x;
+	}
+
+	// Find distance to object from known object width
+	double f = IMPACT_CAMERA_FOCAL;
+	double w = IMPACT_CAN_WIDTH;
+	double d = f * w / (x_large - x_small);
+
+	return d;
 }
 
 void ImpactDetector::drawCorners(cv::Mat& image, 
