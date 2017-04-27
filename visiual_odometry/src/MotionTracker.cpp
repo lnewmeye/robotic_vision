@@ -55,11 +55,11 @@ void MotionTracker::setInitial(Mat image)
 Mat MotionTracker::trackMotion(Mat image)
 {
 	// Using first attempt algorithm
-	//F = firstAttempt(image);
+	F = firstAttempt(image);
 	//F = secondAttempt(image);
 	//F = thirdAttempt(image);
 	//F = fourthAttempt(image);
-	F = fifthAttempt(image);
+	//F = fifthAttempt(image);
 
 	// Save image into previous image
 	previous_image = image.clone();

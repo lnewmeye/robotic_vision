@@ -50,8 +50,8 @@ using cv::Mat;
 		0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00
 
 //#define SEQUENCE_1_SCALE 2.15
-#define SEQUENCE_1_SCALE 1000.0
-//#define SEQUENCE_2_SCALE 
+#define SEQUENCE_1_SCALE 1000.0 // TODO: Fix this
+#define SEQUENCE_2_SCALE 1000.0 // TODO: Fix this
 
 #define OUTPUT_FILE_1 "output/vo_practice_sequence_data.txt"
 #define OUTPUT_FILE_2 "output/byu_hallway_sequence_data.txt"
@@ -74,6 +74,27 @@ int main()
 	// Load vector with image sequence strings
 	vector<string> image_names;
 	image_names.push_back(IMAGE_SEQUENCE_1);
+	//image_names.push_back(IMAGE_SEQUENCE_2);
+
+	// Create queue of output files
+	queue<string> output_files;
+	output_files.push(OUTPUT_FILE_1);
+	//output_files.push(OUTPUT_FILE_2);
+
+	// Create queue of output sequences
+	queue<string> output_sequences;
+	output_sequences.push(OUTPUT_SEQUENCE_1);
+	//output_sequences.push(OUTPUT_SEQUENCE_2);
+
+	// Create queue of scale factors
+	queue<double> scale_factors;
+	scale_factors.push(SEQUENCE_1_SCALE);
+	//scale_factors.push(SEQUENCE_2_SCALE);
+
+	// Create queue of camera parameters
+	queue<Mat> camera_parameters;
+	camera_parameters.push((cv::Mat_<double>(3,3) << SEQUENCE_1_INTRINSIC));
+	//camera_parameters.push((cv::Mat_<double>(3,3) << SEQUENCE_2_INTRINSIC));
 
 	// Iterate through image names and operate on sequence
 	for (string image_name : image_names) {
@@ -88,15 +109,20 @@ int main()
 		odometer.setInitial(image);
 
 		// Open output sequence
-		output_sequence.open(OUTPUT_SEQUENCE_1, 0, 0, image.size());
+		//output_sequence.open(OUTPUT_SEQUENCE_1, 0, 0, image.size());
+		output_sequence.open(output_sequences.front(), 0, 0, image.size());
+		output_sequences.pop();
 
 		// Set camera parameters
-		Mat M = (cv::Mat_<double>(3,3) << SEQUENCE_1_INTRINSIC);
+		//Mat M = (cv::Mat_<double>(3,3) << SEQUENCE_1_INTRINSIC);
+		Mat M = camera_parameters.front();
+		camera_parameters.pop();
 		//TODO: Find a better solution to this to accomodate more than one sequence with different parameters
 		odometer.setIntrinsic(M);
 
 		// Set scale factor
-		odometer.setScale(SEQUENCE_1_SCALE);
+		odometer.setScale(scale_factors.front());
+		scale_factors.pop();
 
 		// Read in next image and begin loop
 		image_sequence >> image;
@@ -126,7 +152,8 @@ int main()
 		}
 
 		// Get output data to write
-		odometer.writeMotion(OUTPUT_FILE_1); 
+		odometer.writeMotion(output_files.front()); 
+		output_files.pop();
 
 		// Reset for next sequence
 		//TODO: implement this
