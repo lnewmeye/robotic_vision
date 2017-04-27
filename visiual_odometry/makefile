@@ -4,8 +4,8 @@ TARGET = visiual_odometry
 MAIN = main.cpp
 SRC = src/
 BIN = bin/
-CCLASS = $(SRC)Motion.cpp $(SRC)VisualOdometer.cpp $(SRC)MotionTracker.cpp
-HCLASS = $(SRC)Motion.hpp $(SRC)VisualOdometer.hpp $(SRC)MotionTracker.hpp
+CCLASS = $(SRC)VisualOdometer.cpp $(SRC)MotionTracker.cpp
+HCLASS = $(SRC)VisualOdometer.hpp $(SRC)MotionTracker.hpp
 
 CXX=g++
 CFLAGS = -std=c++11 -Wall

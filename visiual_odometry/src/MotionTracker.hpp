@@ -11,6 +11,8 @@
 #include <opencv2/features2d.hpp>
 #include <opencv2/opencv.hpp>
 
+#define MOTION_MINIMUM_POINTS 5
+
 #define MOTION_CORNER_QUANTITY 5000
 #define MOTION_CORNER_QUALITY 0.01
 #define MOTION_CORNER_DISTANCE 10
@@ -22,7 +24,7 @@
 #define MOTION_SUBPIX_SIZE 5
 #define MOTION_ZERO_ZONE 5
 
-#define MOTION_RANSAC_EPS 0.01
+#define MOTION_RANSAC_EPS 0.1
 #define MOTION_RANSAC_CONFIDENCE 0.99
 
 class MotionTracker

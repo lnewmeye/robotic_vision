@@ -38,24 +38,42 @@ void VisualOdometer::findOdometry(Mat image)
 	// Track motion
 	F = motion_tracker.trackMotion(image);
 
-	// Compute essential matrix
-	//E = Mt * F * M;
-	E = cv::findEssentialMat(motion_tracker.getPreviousPoints(),
-			motion_tracker.getNewPoints(), M);
-
+	// Save last translation (just in case)
 	Mat T_last = T.clone();
 
-	// Perform SVD on essential matrix and normalize
-	Mat W, U, V, Vt;
-	cv::SVD::compute(E, W, U, Vt);
-	W = cv::Mat_<double>::zeros(3, 3);
-	W.at<double>(0,0) = 1;
-	W.at<double>(1,1) = 1;
-	E = U * W * Vt;
+	// Compute rotation and translation if enough points available
+	vector<Point2f> new_points = motion_tracker.getNewPoints();
+	if (new_points.size() > ODOMETER_MINIMUM_POINTS) {
 
-	// Esimate rotation and translation
-	cv::recoverPose(E, motion_tracker.getPreviousPoints(), 
-			motion_tracker.getNewPoints(), M, R, T);
+		// Compute essential matrix
+		//E = Mt * F * M;
+		E = cv::findEssentialMat(motion_tracker.getPreviousPoints(),
+				motion_tracker.getNewPoints(), M);
+		//E = cv::findEssentialMat(motion_tracker.getNewPoints(),
+		//		motion_tracker.getPreviousPoints(), M);
+
+		// Perform SVD on essential matrix and normalize
+		Mat W, U, V, Vt;
+		cv::SVD::compute(E, W, U, Vt);
+		W = cv::Mat_<double>::zeros(3, 3);
+		W.at<double>(0,0) = 1;
+		W.at<double>(1,1) = 1;
+		E = U * W * Vt;
+
+		// Esimate rotation and translation
+		cv::recoverPose(E, motion_tracker.getPreviousPoints(), 
+				motion_tracker.getNewPoints(), M, R, T);
+	}
+	else { // Set default rotation and translation
+
+		// Report status
+
+		// Use identity rotation matrix (i.e. no rotation)
+		R = Mat::eye(3,3,CV_64F);
+
+		// Use previous translation
+		T = T_last.clone();
+	}
 
 	// Reverse T if reversed
 	if (T.at<double>(2) > 0) {
@@ -68,12 +86,6 @@ void VisualOdometer::findOdometry(Mat image)
 			R.at<double>(2,2) < 0) {
 		R = Mat::eye(3,3, CV_64F);
 		std::cout << "no rotation used" << std::endl;
-	}
-
-	if (motion_tracker.getNewPoints().size() < ODOMETER_MINIMUM_POINTS) {
-		R = Mat::eye(3,3,CV_64F);
-		std::cout << "no rotation used" << std::endl;
-		T = T_last;
 	}
 
 	// Scale translation matrix
@@ -96,6 +108,7 @@ void VisualOdometer::setIntrinsic(Mat M)
 
 void VisualOdometer::setScale(double scale)
 {
+	this->scale = scale;
 }
 
 void VisualOdometer::drawMotion(Mat image, Mat& display)

@@ -29,6 +29,9 @@ using cv::Point3f;
 using cv::Point3d;
 using cv::Mat;
 
+// Parameters for image skipping
+#define IMAGE_SKIPS 0
+
 // Parameters for display window
 #define DISPLAY_WINDOW_1 "Display Window 1"
 #define DISPLAY_WINDOW_2 "Display Window 2"
@@ -49,9 +52,8 @@ using cv::Mat;
 		0.0000000000000000e+00, 6.8073800850564749e+02, 2.2477413395670021e+02, \
 		0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00
 
-//#define SEQUENCE_1_SCALE 2.15
-#define SEQUENCE_1_SCALE 1000.0 // TODO: Fix this
-#define SEQUENCE_2_SCALE 1000.0 // TODO: Fix this
+#define SEQUENCE_1_SCALE 2.15
+#define SEQUENCE_2_SCALE 0.8
 
 #define OUTPUT_FILE_1 "output/vo_practice_sequence_data.txt"
 #define OUTPUT_FILE_2 "output/byu_hallway_sequence_data.txt"
@@ -102,6 +104,11 @@ int main()
 		// Open image sequence
 		cout << "Processing sequence: " << image_name << endl;
 		image_sequence.open(image_name);
+
+		// Skip first number of images
+		for (int i = 0; i < IMAGE_SKIPS; i++) {
+			image_sequence >> image;
+		}
 
 		// Read in first image and set as inital in Motion object
 		image_sequence >> image;

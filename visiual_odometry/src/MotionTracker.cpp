@@ -7,6 +7,7 @@
 using std::vector;
 using cv::Size;
 using cv::Mat;
+using cv::Rect;
 using cv::Point2d;
 using cv::Point2f;
 using cv::KeyPoint;
@@ -88,7 +89,6 @@ Mat MotionTracker::firstAttempt(Mat image)
 	cv::calcOpticalFlowPyrLK(previous_image, image, previous_points, 
 			new_points, status, error, flow_size, OPTICAL_FLOW_LEVEL,
 			FLOW_CRITERIA, 0, 0.001);
-	//TODO: possibly modify criteria (See Jeff's Code line 319)
 
 	uchar stat;
 	for (unsigned i = status.size(); i > 0; i--) {
@@ -100,6 +100,52 @@ Mat MotionTracker::firstAttempt(Mat image)
 		if (!stat) {
 			previous_points.erase(previous_points.begin()+i-1);
 			new_points.erase(new_points.begin()+i-1);
+		}
+	}
+
+	// Exit if too few points
+	/*if (new_points.size() < MOTION_MINIMUM_POINTS) {
+		return Mat::eye(3, 3, CV_64F);
+	}*/
+
+	// Template match if too few points
+	if (new_points.size() < MOTION_MINIMUM_POINTS) {
+
+		std::cout << "Template matching" << std::endl;
+		// Reset new_points to empty
+		previous_points.clear();
+		new_points.clear();
+
+		// Find just 10 points using Harris corner detection
+		Mat image_center = previous_image.rowRange(100,380).colRange(100,540);
+		cv::goodFeaturesToTrack(image_center, previous_points, 50, 
+				MOTION_CORNER_QUALITY, MOTION_CORNER_DISTANCE);
+
+
+		// Template match for each point in new image
+		for (Point2f point : previous_points) {
+
+			// Select regions for template and search
+			Rect template_block = Rect(point.x+50,point.y+50,100,100);
+			Mat image_template = image(template_block);
+			Rect region_block = Rect(point.x,point.y,200,200);
+			Mat image_region = image(region_block);
+
+			// Create structures for result
+			Mat result;
+			cv::Point max_location;
+			Point2f match;
+
+			// Match block in selection
+			cv::matchTemplate(image_region, image_template, result, 
+					cv::TM_CCOEFF);
+			normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, Mat());
+			cv::minMaxLoc(result, NULL, NULL, NULL, &max_location);
+
+			// Adjust coordinates for match
+			match.x = max_location.x + point.x - 100;
+			match.y = max_location.y + point.y - 100;
+			new_points.push_back(match);
 		}
 	}
 
@@ -128,6 +174,10 @@ Mat MotionTracker::firstAttempt(Mat image)
 
 Mat MotionTracker::secondAttempt(Mat image)
 {
+	// Release previous point information
+	previous_points.clear();
+	new_points.clear();
+
 	// Track Corners using PyrLK
 	vector<unsigned char> status;
 	vector<float> error;
@@ -135,6 +185,11 @@ Mat MotionTracker::secondAttempt(Mat image)
 	cv::calcOpticalFlowPyrLK(previous_image, image, previous_points, 
 			new_points, status, error, flow_size, OPTICAL_FLOW_LEVEL,
 			FLOW_CRITERIA, 0, 0.001);
+
+	// Exit if too few points
+	if (new_points.size() < MOTION_MINIMUM_POINTS) {
+		return Mat::eye(3, 3, CV_64F);
+	}
 
 	// Find fundamental matrix
 	vector<uchar> mask;
@@ -161,6 +216,10 @@ Mat MotionTracker::secondAttempt(Mat image)
 
 Mat MotionTracker::thirdAttempt(Mat image)
 {
+	// Release previous point information
+	previous_points.clear();
+	new_points.clear();
+
 	// Remove old point track if above max frames
 	if (point_track.size() >= POINT_TRACK_MAX_FRAMES) {
 		point_track.pop_front();
@@ -219,6 +278,12 @@ Mat MotionTracker::thirdAttempt(Mat image)
 	vector<vector<Point2f>> old_track = point_track.front();
 	new_points = old_track.back();
 	previous_points = old_track.at(old_track.size() - 2); // TODO: Check this is right
+
+	// Exit if too few points
+	if (new_points.size() < MOTION_MINIMUM_POINTS) {
+		return Mat::eye(3, 3, CV_64F);
+	}
+
 	F = cv::findFundamentalMat(previous_points, new_points, cv::FM_RANSAC,
 			1, 0.70);
 
@@ -230,23 +295,37 @@ Mat MotionTracker::thirdAttempt(Mat image)
 
 Mat MotionTracker::fourthAttempt(Mat image)
 {
+	// Release previous point information
+	previous_points.clear();
+	new_points.clear();
+
 	vector<cv::KeyPoint> previous_keypoints;
 	detector->detect(previous_image, previous_keypoints);
 	//detector->convert(previous_keypoints, previus_points);
 	cv::KeyPoint::convert(previous_keypoints, previous_points);
 
-	// Track Corners using PyrLK
-	vector<unsigned char> status;
-	vector<float> error;
-	Size flow_size(31,31);
-	cv::calcOpticalFlowPyrLK(previous_image, image, previous_points, 
-			new_points, status, error, flow_size, OPTICAL_FLOW_LEVEL,
-			FLOW_CRITERIA, 0, 0.001);
+	// Track Corners using PyrLK (if sufficient points)
+	if (previous_points.size() > MOTION_MINIMUM_POINTS) {
+		vector<unsigned char> status;
+		vector<float> error;
+		Size flow_size(31,31);
+		cv::calcOpticalFlowPyrLK(previous_image, image, previous_points, 
+				new_points, status, error, flow_size, OPTICAL_FLOW_LEVEL,
+				FLOW_CRITERIA, 0, 0.001);
+	}
+	else {
+		previous_points.clear();
+	}
+
+	// Exit if too few points
+	if (new_points.size() < MOTION_MINIMUM_POINTS) {
+		return Mat::eye(3, 3, CV_64F);
+	}
 
 	// Find fundamental matrix
 	vector<uchar> mask;
 	F = cv::findFundamentalMat(previous_points, new_points, cv::FM_RANSAC,
-			1, 0.70, mask);
+			MOTION_RANSAC_EPS, MOTION_RANSAC_CONFIDENCE, mask);
 
 	// Remove non-matching corners
 	uchar match;
@@ -268,6 +347,10 @@ Mat MotionTracker::fourthAttempt(Mat image)
 
 Mat MotionTracker::fifthAttempt(cv::Mat image)
 {
+	// Release previous point information
+	previous_points.clear();
+	new_points.clear();
+
 	// Detect previous features with ORB detector
 	Mat previous_descriptors;
 	vector<KeyPoint> previous_keypoints;
@@ -277,7 +360,6 @@ Mat MotionTracker::fifthAttempt(cv::Mat image)
 	// Detect features with ORB detector
     Mat new_descriptors;
 	vector<KeyPoint> new_keypoints;
-	//detector->detect(previous_image, previous_keypoints);
 	detector->detectAndCompute(image, cv::noArray(), 
 			new_keypoints, new_descriptors);
 
@@ -298,10 +380,15 @@ Mat MotionTracker::fifthAttempt(cv::Mat image)
 	cv::KeyPoint::convert(matched1, previous_points);
 	cv::KeyPoint::convert(matched2, new_points);
 
+	// Exit if too few points
+	if (new_points.size() < MOTION_MINIMUM_POINTS) {
+		return Mat::eye(3, 3, CV_64F);
+	}
+
 	// Find fundamental matrix
 	vector<uchar> mask;
 	F = cv::findFundamentalMat(previous_points, new_points, cv::FM_RANSAC,
-			1, 0.70, mask);
+			MOTION_RANSAC_EPS, MOTION_RANSAC_CONFIDENCE, mask);
 
 	// Remove outliers
 	uchar match;
