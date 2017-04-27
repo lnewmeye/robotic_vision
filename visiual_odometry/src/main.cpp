@@ -75,28 +75,28 @@ int main()
 
 	// Load vector with image sequence strings
 	vector<string> image_names;
-	//image_names.push_back(IMAGE_SEQUENCE_1);
-	image_names.push_back(IMAGE_SEQUENCE_2);
+	image_names.push_back(IMAGE_SEQUENCE_1);
+	//image_names.push_back(IMAGE_SEQUENCE_2);
 
 	// Create queue of output files
 	queue<string> output_files;
-	//output_files.push(OUTPUT_FILE_1);
-	output_files.push(OUTPUT_FILE_2);
+	output_files.push(OUTPUT_FILE_1);
+	//output_files.push(OUTPUT_FILE_2);
 
 	// Create queue of output sequences
 	queue<string> output_sequences;
-	//output_sequences.push(OUTPUT_SEQUENCE_1);
-	output_sequences.push(OUTPUT_SEQUENCE_2);
+	output_sequences.push(OUTPUT_SEQUENCE_1);
+	//output_sequences.push(OUTPUT_SEQUENCE_2);
 
 	// Create queue of scale factors
 	queue<double> scale_factors;
-	//scale_factors.push(SEQUENCE_1_SCALE);
-	scale_factors.push(SEQUENCE_2_SCALE);
+	scale_factors.push(SEQUENCE_1_SCALE);
+	//scale_factors.push(SEQUENCE_2_SCALE);
 
 	// Create queue of camera parameters
 	queue<Mat> camera_parameters;
-	//camera_parameters.push((cv::Mat_<double>(3,3) << SEQUENCE_1_INTRINSIC));
-	camera_parameters.push((cv::Mat_<double>(3,3) << SEQUENCE_2_INTRINSIC));
+	camera_parameters.push((cv::Mat_<double>(3,3) << SEQUENCE_1_INTRINSIC));
+	//camera_parameters.push((cv::Mat_<double>(3,3) << SEQUENCE_2_INTRINSIC));
 
 	// Iterate through image names and operate on sequence
 	for (string image_name : image_names) {
