@@ -24,6 +24,8 @@ VisualOdometer::VisualOdometer()
 {
 	// Set rotation matrix to defualt
 	P = Mat::eye(4, 4, CV_64F);
+	R = Mat::eye(3, 3, CV_64F);
+	T = Mat::zeros(3, 1, CV_64F);
 }
 
 void VisualOdometer::setInitial(Mat image)
@@ -41,17 +43,38 @@ void VisualOdometer::findOdometry(Mat image)
 	E = cv::findEssentialMat(motion_tracker.getPreviousPoints(),
 			motion_tracker.getNewPoints(), M);
 
+	Mat T_last = T.clone();
+
 	// Perform SVD on essential matrix and normalize
-	//Mat W, U, V, Vt;
-	//cv::SVD::compute(E, W, U, Vt);
-	//W = cv::Mat_<double>::zeros(3, 3);
-	//W.at<double>(0,0) = 1;
-	//W.at<double>(1,1) = 1;
-	//E = U * W * Vt;
+	Mat W, U, V, Vt;
+	cv::SVD::compute(E, W, U, Vt);
+	W = cv::Mat_<double>::zeros(3, 3);
+	W.at<double>(0,0) = 1;
+	W.at<double>(1,1) = 1;
+	E = U * W * Vt;
 
 	// Esimate rotation and translation
 	cv::recoverPose(E, motion_tracker.getPreviousPoints(), 
 			motion_tracker.getNewPoints(), M, R, T);
+
+	// Reverse T if reversed
+	if (T.at<double>(2) > 0) {
+		T = -1 * T;
+		std::cout << "translation reversed" << std::endl;
+	}
+
+	// the R was poorly resolved from recoverPose set to identity
+	if (R.at<double>(0,0) < 0 || R.at<double>(1,1) < 0 || 
+			R.at<double>(2,2) < 0) {
+		R = Mat::eye(3,3, CV_64F);
+		std::cout << "no rotation used" << std::endl;
+	}
+
+	if (motion_tracker.getNewPoints().size() < ODOMETER_MINIMUM_POINTS) {
+		R = Mat::eye(3,3,CV_64F);
+		std::cout << "no rotation used" << std::endl;
+		T = T_last;
+	}
 
 	// Scale translation matrix
 	T *= scale;

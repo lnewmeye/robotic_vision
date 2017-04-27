@@ -8,6 +8,8 @@
 #include <opencv2/core.hpp>
 #include "MotionTracker.hpp"
 
+#define ODOMETER_MINIMUM_POINTS 10
+
 class VisualOdometer
 {
 	public:

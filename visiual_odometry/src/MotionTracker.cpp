@@ -25,11 +25,13 @@ MotionTracker::MotionTracker()
 	ZERO_ZONE = Size(MOTION_ZERO_ZONE, MOTION_ZERO_ZONE);
 	SUBPIX_CRITERIA = cv::TermCriteria(CV_TERMCRIT_EPS +
 			CV_TERMCRIT_ITER, 40, 0.001);
+    //FLOW_CRITERIA = cv::TermCriteria(cv::TermCriteria::COUNT |
+			//cv::TermCriteria::EPS, 20, 0.03);
     FLOW_CRITERIA = cv::TermCriteria(cv::TermCriteria::COUNT |
-			cv::TermCriteria::EPS, 20, 0.03);
+			cv::TermCriteria::EPS, 30, 0.01);
 	FLOW_SIZE = Size(31,31);
 
-	// Special for fourth attempt
+	// Special for fourth and fifth attempts
 	detector = cv::ORB::create(MOTION_CORNER_QUANTITY);
 	matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
 }
@@ -43,8 +45,8 @@ void MotionTracker::setInitial(Mat image)
 	// Use Harris Corner (goodFeaturesToTrack) to find corners
 	cv::goodFeaturesToTrack(image, previous_points, MOTION_CORNER_QUANTITY,
 			MOTION_CORNER_QUALITY, MOTION_CORNER_DISTANCE);
-	cv::cornerSubPix(image, previous_points, SUBPIX_SIZE, ZERO_ZONE,
-			SUBPIX_CRITERIA);
+	//cv::cornerSubPix(image, previous_points, SUBPIX_SIZE, ZERO_ZONE,
+			//SUBPIX_CRITERIA);
 
 	// Use ORB to find corners
 	//vector<uchar> mask;
@@ -69,6 +71,10 @@ Mat MotionTracker::trackMotion(Mat image)
 
 Mat MotionTracker::firstAttempt(Mat image)
 {
+	// Release previous point information
+	previous_points.clear();
+	new_points.clear();
+
 	// Use Harris Corner (goodFeaturesToTrack) to find corners
 	cv::goodFeaturesToTrack(image, previous_points, MOTION_CORNER_QUANTITY,
 			MOTION_CORNER_QUALITY, MOTION_CORNER_DISTANCE);
@@ -82,11 +88,25 @@ Mat MotionTracker::firstAttempt(Mat image)
 	cv::calcOpticalFlowPyrLK(previous_image, image, previous_points, 
 			new_points, status, error, flow_size, OPTICAL_FLOW_LEVEL,
 			FLOW_CRITERIA, 0, 0.001);
+	//TODO: possibly modify criteria (See Jeff's Code line 319)
+
+	uchar stat;
+	for (unsigned i = status.size(); i > 0; i--) {
+
+		// Pop off stat
+		stat = status.back();
+		status.pop_back();
+
+		if (!stat) {
+			previous_points.erase(previous_points.begin()+i-1);
+			new_points.erase(new_points.begin()+i-1);
+		}
+	}
 
 	// Find fundamental matrix
 	vector<uchar> mask;
 	F = cv::findFundamentalMat(previous_points, new_points, cv::FM_RANSAC,
-			1, 0.70, mask);
+			MOTION_RANSAC_EPS, MOTION_RANSAC_CONFIDENCE, mask);
 
 	// Remove non-matching corners
 	uchar match;
@@ -145,7 +165,6 @@ Mat MotionTracker::thirdAttempt(Mat image)
 	if (point_track.size() >= POINT_TRACK_MAX_FRAMES) {
 		point_track.pop_front();
 	}
-
 
 	// Find new set of points
 	cv::goodFeaturesToTrack(previous_image, previous_points, 
